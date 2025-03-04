@@ -1,13 +1,14 @@
 #include "gostream-comm.hpp"
 #include "tally-settings.hpp"
 #include <CRC16.h>
-
+#include <queue>
 
 namespace comm {
-  WiFiClient* client_;
-  stateT state; // = {0, 0, 0, 0, 0, 0, 0, {0, 0, 0, 0}, 0, false, false, false, 0};
+  Client* client_;
+  stateT state; 
+  std::queue<JsonDocument*> messageQueue;
 
-  bool init(WiFiClient& c) {
+  bool init(Client& c) {
     client_ = &c;
     return true;
   }
@@ -29,7 +30,7 @@ namespace comm {
   }
 
   bool sendMessage(String message) {  
-   JsonDocument json;
+    JsonDocument json;
     uint8_t packet[128];
     json["id"] = message ;
     json["type"] = "get";
@@ -58,37 +59,37 @@ namespace comm {
     return true;
   }
 
-  bool receiveMessage(JsonDocument* doc) {
-    // peek incoming bytes from the server 
-    int c = client_->peek();
+  bool receiveMessages() {
+    while(client_->available() > 0) {
+      int c = client_->peek();
+      
+      if((char)c != '{') {
+        client_->read();
+      } else {
+        auto* msg = new JsonDocument();
+        DeserializationError error = deserializeJson(*msg, *client_);
+        messageQueue.push(msg);
 
-    if(c == -1) {
-      return false;
+        // JSON misses last char and then read CRC 
+        client_->read();
+        client_->read();
+        client_->read();
+
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+          return false;
+        }
+      }
     }
   
-    while ((char)c != '{') {
-      client_->read();
-      c = client_->peek();
-    }
-    DeserializationError error = deserializeJson(*doc, *client_);
-
-    // JSON misses last char and then read CRC 
-    client_->read();
-    client_->read();
-    client_->read();
-
-    if (error) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return false;
-    }
     return true;
   }
 
   #define DEBUG_PRINT(val) { JsonVariant var; tally::settings::query("/debug", var); if(var.as<bool>()) { Serial.print(#val); Serial.print(": "); Serial.println(val); }} 
-  void handleMessage(JsonDocument* doc) {
-    String command = String((*doc)["id"].as<const char *>());
-    JsonArray value =  (*doc)["value"].as<JsonArray>();
+  void handleMessage(JsonDocument& doc) {
+    String command = String((doc)["id"].as<const char *>());
+    JsonArray value =  (doc)["value"].as<JsonArray>();
 
     if(command == String("pvwIndex")) {
       state.pvwId = value[0];
@@ -135,13 +136,17 @@ namespace comm {
     return &state;
   }
 
-  bool checkForUpdates() {
-    bool stateUpdated = false;
-    JsonDocument json;
-    while(receiveMessage(&json)) {
-      stateUpdated = true;
-      handleMessage(&json);
+  bool receiveAndHandleMessages() {
+    receiveMessages();
+    int nofMessages = messageQueue.size();
+    while(messageQueue.size() > 0) {
+      Serial.println("HANDLE MESSAGE");
+      JsonDocument* tmp = messageQueue.front();
+      messageQueue.pop();
+      handleMessage(*tmp);
+      delete tmp;
     }
-    return stateUpdated;
+
+    return nofMessages > 0;
   }
 }

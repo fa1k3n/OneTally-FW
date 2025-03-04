@@ -1,6 +1,6 @@
 #include <ArduinoJson.h>
 #include <stdbool.h>
-#include "WiFiClient.h"
+#include "Client.h"
 
 // Transition sources
 #define USK 1
@@ -33,12 +33,11 @@ namespace comm {
     int transitionSource;
   } stateT;
 
-
-  bool init(WiFiClient& c);
+  bool init(Client& c);
   bool connect(IPAddress address, uint16_t port);
   bool sendMessage(String message);
-  bool receiveMessage(JsonDocument* doc);
-  void handleMessage(JsonDocument* doc);
+  bool receiveMessages();
+  void handleMessage(JsonDocument& doc);
   stateT* getState();
-  bool checkForUpdates();
+  bool receiveAndHandleMessages();
 }

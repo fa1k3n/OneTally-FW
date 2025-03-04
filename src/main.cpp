@@ -1,14 +1,11 @@
 #include <SPI.h>
 #include <ArduinoJson.h>
 #include "WiFi.h"
-#include <Adafruit_NeoPixel.h>
+
 #include "gostream-comm.hpp"
 #include "tally-serial.hpp"
 #include "tally-settings.hpp"
-
-// Board specific pins
-#define LED_PIN 18
-Adafruit_NeoPixel leds(1, LED_PIN, NEO_GRB + NEO_KHZ800);
+#include "tally-led.hpp"
 
 #define IN1_ID 0
 #define IN2_ID 1
@@ -21,15 +18,7 @@ WiFiClient client;
 
 void initializeDevice() {
   tally::settings::init();
-
-  // Led 5V
-  pinMode(19, OUTPUT);
-  digitalWrite(19, HIGH);
-  delay(100);
-  leds.begin();
-  leds.clear();
-  leds.show();
-
+  tally::led::init();
   tally::serial::init();
 }
 
@@ -47,8 +36,7 @@ void syncState() {
 }
 
 void updateTally() {
-  leds.clear();
-  
+  tally::led::clear();
   comm::stateT* newState = comm::getState();
   JsonVariant srcIdVar;
   tally::settings::query("/srcId", srcIdVar);
@@ -69,15 +57,15 @@ void updateTally() {
   JsonVariant brightnessVar;
   tally::settings::query("/tally/led/brightness", brightnessVar);
   int8_t brightness = brightnessVar.as<int8_t>();
-  if(pgmOn) leds.setPixelColor(0, leds.Color(0, 255 * brightness / 100, 0));
-  if(pvwOn && !pgmOn) leds.setPixelColor(0, leds.Color(255 * brightness / 100, 0, 0));
-
-  leds.show();
+  if(pgmOn) tally::led::setPixelColor(0, 255, 0);
+  if(pvwOn && !pgmOn) tally::led::setPixelColor(255, 0, 0);
+  tally::led::show();
 }
 
 void connect() {
-  leds.setPixelColor(0, leds.Color(0, 0, 255));
-  leds.show();
+  // CHANGE THESE TO PREDEFINED COLORS
+  tally::led::setPixelColor(0, 0, 255);
+  tally::led::show();
   JsonVariant var;
 
   tally::settings::query("/tally/wifi/ssid", var);
@@ -124,8 +112,8 @@ void connect() {
   address.fromString(ip.c_str());
   comm::connect(address, port);
 
-  leds.clear();
-  leds.show();
+  tally::led::clear();
+  tally::led::show();
 }
 
 void setup() {
@@ -138,9 +126,15 @@ void setup() {
 
 void loop() { 
   if (client.available()) {
-    if(comm::checkForUpdates()) {
-      updateTally();
-    }
+    //if(comm::checkForUpdates()) {
+    //  updateTally();
+    //}
+    comm::receiveAndHandleMessages();
+
+    JsonVariant var;
+    tally::settings::query("/tally/led/brightness", var);
+    tally::led::setBrigtness(var.as<uint8_t>());
+    updateTally();
   }
 
   tally::serial::read();
