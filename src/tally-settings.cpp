@@ -48,7 +48,7 @@ namespace tally {
             return true;
         }
 
-        bool query(const char* path, JsonVariant& var) {
+        bool query_(const char* path, JsonVariant& var) {
             if(strchr(path, '/') == nullptr) {
                 errStr_ = F("Error: Malformed parameter address");
                 return false;
@@ -106,6 +106,63 @@ namespace tally {
             }
             free(copy);
             return true;
+        }
+
+        template<>
+        std::optional<JsonVariant> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            return std::make_optional<JsonVariant>(var);
+        }
+
+        template<>
+        std::optional<std::string> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            return std::make_optional<std::string>(var.as<std::string>());
+        }
+
+        template<>
+        std::optional<uint16_t> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            int val = atoi(var.as<std::string>().c_str());
+            return std::make_optional<uint16_t>((uint16_t)val);
+        }
+
+        template<>
+        std::optional<uint8_t> query(const char* path) {
+            uint16_t val = query<uint16_t>(path).value();
+            return std::make_optional<uint8_t>((uint8_t)val);
+        }
+
+        template<>
+        std::optional<IPAddress> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            IPAddress address;
+            address.fromString(var.as<std::string>().c_str());
+            return std::make_optional<IPAddress>(address);
+        }
+
+        template<>
+        std::optional<bool> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            bool ret = false;
+            if(var.as<std::string>() == "true") 
+                ret = true;
+            return  std::make_optional<bool>(ret); 
         }
 
         bool update(const char* path, const char* value) {

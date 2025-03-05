@@ -15,9 +15,6 @@ namespace comm {
 
   bool connect(IPAddress address, uint16_t port, uint8_t maxTries) {
     tally::settings::update("/state/status", "connecting");
-    Serial.print("Gostream IP: ");
-    Serial.println(address.toString());
-
     Serial.print("Connecting to GoStream.");
     uint8_t i = 0;
     while(!client_->connect(address, port) && i++ < maxTries) {
@@ -91,7 +88,7 @@ namespace comm {
     return true;
   }
 
-  #define DEBUG_PRINT(val) { JsonVariant var; tally::settings::query("/debug", var); if(var.as<bool>()) { Serial.print(#val); Serial.print(": "); Serial.println(val); }} 
+  #define DEBUG_PRINT(val) {}; //{ if(tally::settings::query<bool>("/debug")) { Serial.print(#val); Serial.print(": "); Serial.println(val); }} 
   void handleMessage(JsonDocument& doc) {
     String command = String((doc)["id"].as<const char *>());
     JsonArray value =  (doc)["value"].as<JsonArray>();

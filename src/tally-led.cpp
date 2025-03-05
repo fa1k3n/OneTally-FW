@@ -13,7 +13,6 @@ namespace tally {
         constexpr int NOF_PIXELS = 1;
         
         std::vector<Adafruit_NeoPixel*> leds;
-        JsonVariant connectionStatus;
 
         void init() {
             leds.push_back(new Adafruit_NeoPixel(NOF_PIXELS, LED1_CTRL_PIN, NEO_GRB + NEO_KHZ800));
@@ -24,7 +23,6 @@ namespace tally {
             pinMode(LED2_PWR_PIN, OUTPUT);
             digitalWrite(LED2_PWR_PIN, HIGH);
 
-            tally::settings::query("/state/status", connectionStatus); 
             delay(100);
             begin();
             clear();
@@ -39,10 +37,11 @@ namespace tally {
         }
 
         void show() {
-            if(connectionStatus.as<std::string>().compare("configuration") == 0) {
+            auto status = tally::settings::query<std::string>("/state/status").value();
+            if(status.compare("configuration") == 0) {
                 // Configuration mode
                 setPixelColor(255, 255, 0);
-            } else if(connectionStatus.as<std::string>().compare("searching") == 0 || connectionStatus.as<std::string>().compare("attached") == 0 || connectionStatus.as<std::string>().compare("connecting") == 0) {
+            } else if(status.compare("searching") == 0 || status.compare("attached") == 0 || status.compare("connecting") == 0) {
                 // Configuration mode
                 setPixelColor(0, 0, 255);
             }

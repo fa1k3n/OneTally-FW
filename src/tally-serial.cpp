@@ -36,12 +36,12 @@ namespace tally {
             return;
         }
 
-        JsonVariant value;
-        if(!tally::settings::query(path, value)) {
+        auto var = tally::settings::query<JsonVariant>(path);
+        if(!var) {
             sender->GetSerial()->println(F("Error: Missing parameter argument"));
             return;
         }
-        serializeJsonPretty(value, *sender->GetSerial());
+        serializeJsonPretty(var.value(), *sender->GetSerial());
         Serial.println("");
     }
 
