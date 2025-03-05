@@ -30,12 +30,12 @@ void syncState() {
   comm::sendMessage("pipSource");
   comm::sendMessage("upStreamKeyType");
   comm::sendMessage("transitionSource");
+  delay(200);
 }
 
 void updateTally() {
-  tally::led::clear();
   comm::stateT* newState = comm::getState();
-  const auto srcId = tally::settings::query<uint8_t>("/srcId");
+  int srcId = tally::settings::query<int>("/srcId").value();
 
   bool pgmOn = false;
   bool pvwOn = false; 
@@ -48,11 +48,9 @@ void updateTally() {
   if((newState->transitionSource & USK) && (newState->uskFillSrcId[newState->uskType] == srcId || newState->lumaKeySrcId == srcId)) pvwOn = true; 
   if(newState->transitionOngoing && (newState->pvwId == srcId ||newState->pgmId == srcId))   pgmOn = true;
 
-  // Light the candles, if both PGM and PWV are active then only light PGM  
-  const auto brightness = tally::settings::query<uint8_t>("/tally/led/brightness");
-  if(pgmOn) tally::led::setPixelColor(0, 255, 0);
-  if(pvwOn && !pgmOn) tally::led::setPixelColor(255, 0, 0);
-  tally::led::show();
+  if(pgmOn) tally::settings::update("/state/tally", 2);
+  else if(pvwOn && !pgmOn) tally::settings::update("/state/tally", 1);
+  else tally::settings::update("/state/tally", 0);
 }
 
 bool setUpWiFi(int maxTries) {
@@ -61,8 +59,6 @@ bool setUpWiFi(int maxTries) {
   auto useDHCP =  tally::settings::query<bool>("/tally/wifi/useDHCP").value();
 
   tally::settings::update("/state/status", "searching");
-  tally::led::show();
-
   if(!useDHCP) {
     const auto tallyAddress = tally::settings::query<IPAddress>("/tally/wifi/address").value();
     const auto tallyGateway = tally::settings::query<IPAddress>("/tally/wifi/gateway").value();
@@ -82,7 +78,6 @@ bool setUpWiFi(int maxTries) {
   if(WiFi.status() == WL_CONNECTED) {
     Serial.println(F("OK"));
     tally::settings::update("/state/status", "attached");
-    tally::led::show();
     if(useDHCP)
       tally::settings::update("/state/dhcpAddress", WiFi.localIP().toString().c_str());
   } else {
@@ -98,16 +93,10 @@ void connectToDevice() {
   auto address = tally::settings::query<IPAddress>("/gostream/address").value();
   auto port = tally::settings::query<uint16_t>("/gostream/port").value();
   comm::connect(address, port, 5);
-  tally::led::show();
 }
 
 void connect() {
-  // CHANGE THESE TO PREDEFINED COLORS
-  tally::led::setPixelColor(0, 0, 255);
-  tally::led::show();
-  
   setUpWiFi(5);  
-  
   if(WiFi.status() != WL_CONNECTED) {
     // Setup AP
     tally::settings::update("/state/status", "configuration");
@@ -118,22 +107,29 @@ void connect() {
   } else {
     connectToDevice();
   }
-
   server.begin();
   tally::webui::init(server);
-  tally::led::clear();
-  tally::led::show();
 }
 
+void ledWorker(void *pvParameters) {
+  tally::led::init();
+  while(1) {
+    tally::led::show();
+  }
+}
+TaskHandle_t ledTask;
+
 void setup() {
+
+
   Serial.begin(921600);
   initializeDevice();
+  xTaskCreatePinnedToCore(
+    ledWorker, "LED worker", 10000, NULL, 1, &ledTask, 0);
   connect();
   if(tally::settings::query<std::string>("/state/status").value().compare("configuration")) {
     syncState();
     if(tally::settings::query<bool>("/smartMode")) {
-      // Smart mode enabled, wait for state to be received and then update srcId
-      delay(200);
       comm::receiveAndHandleMessages();
       comm::stateT* newState = comm::getState();
       tally::settings::update("/srcId", newState->pvwId);
@@ -143,10 +139,8 @@ void setup() {
 }
 
 void loop() { 
-  if (tally::settings::query<std::string>("/state/status").value().compare("configuration") && client.available()) {
+  if (tally::settings::query<std::string>("/state/status") != "configuration" && client.available()) {
     comm::receiveAndHandleMessages();
-    JsonVariant var;
-    tally::led::setBrigtness(tally::settings::query<uint8_t>("/tally/led/brightness").value());
   }
   tally::serial::read();
   tally::webui::checkAndServeConnection();

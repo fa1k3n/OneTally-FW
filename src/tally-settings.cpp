@@ -1,5 +1,6 @@
 #include "tally-settings.hpp"
 #include <Preferences.h>
+#include <mutex>
 
 JsonDocument settingsBank;
 
@@ -7,8 +8,9 @@ namespace tally {
     namespace settings {
         Preferences preferences;
         const __FlashStringHelper* errStr_;
+        std::mutex settingsMutex;
 
-         const __FlashStringHelper* lastError() {
+        const __FlashStringHelper* lastError() {
             return errStr_;
         }
 
@@ -33,6 +35,8 @@ namespace tally {
         */
         
             load();
+
+            settingsBank["state"]["tally"] = (int)0;
         }
 
         bool commit() {  
@@ -44,7 +48,9 @@ namespace tally {
 
         bool load() {
             std::string settings_str = preferences.getString("settings", "").c_str();
+            settingsMutex.lock();
             deserializeJson(settingsBank, settings_str);
+            settingsMutex.unlock();
             return true;
         }
 
@@ -56,18 +62,21 @@ namespace tally {
             // Split nodes
             char* copy = strdup(path);
             char *t = strtok(copy, "/");
+            settingsMutex.lock();
             JsonVariant tmp = settingsBank;
             while (t != nullptr) {           
                 JsonVariant foundObject = tmp[t];
                 if (foundObject.isNull()) {
                     free(copy);
                     errStr_ = F("path not found");
+                    settingsMutex.unlock();
                     return false;
                 }
                 tmp = tmp[t];
                 t = strtok(nullptr, "/");
             }
             free(copy);
+            settingsMutex.unlock();
             var = tmp;
             return true;
         }
@@ -81,12 +90,14 @@ namespace tally {
             
             char* copy = strdup(path);
             char *t = strtok(copy, "/");
+            settingsMutex.lock();
             JsonVariant tmp = settingsBank;
             while (t != nullptr) {           
                 JsonVariant foundObject = tmp[t];
                 if (foundObject.isNull()) {
                     free(copy);
                     errStr_ = F("path not found");
+                    settingsMutex.unlock();
                     return false;
                 }
                 tmp = tmp[t];
@@ -105,6 +116,7 @@ namespace tally {
                 }
             }
             free(copy);
+            settingsMutex.unlock();
             return true;
         }
 
@@ -134,6 +146,16 @@ namespace tally {
             }
             int val = atoi(var.as<std::string>().c_str());
             return std::make_optional<uint16_t>((uint16_t)val);
+        }
+
+        template<>
+        std::optional<int> query(const char* path) {
+            JsonVariant var;
+            if(!query_(path, var)) {
+                return std::nullopt;
+            }
+            int val = atoi(var.as<std::string>().c_str());
+            return std::make_optional<int>(val);
         }
 
         template<>
