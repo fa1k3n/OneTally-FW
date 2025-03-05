@@ -4,7 +4,7 @@
 
 namespace tally {
   namespace serial {
-    char serial_command_buffer_[32];
+    char serial_command_buffer_[128];
     SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 
      void printHelp(SerialCommands* sender) {
@@ -12,7 +12,8 @@ namespace tally {
         sender->GetSerial()->println("q [path] - queries for setting value with path. q / will show all settings");
         sender->GetSerial()->println("u [path] [value] - updates setting at path with value");
         sender->GetSerial()->println("c - commits current settings to persistent memory");
-        sender->GetSerial()->println("r - reload nonpersisten settings to values from persistent memory");
+        sender->GetSerial()->println("l - load nonpersisten settings to values from persistent memory");
+        sender->GetSerial()->println("r - restarts the tally");
         sender->GetSerial()->println("? - prints help menu");
      }
 
@@ -74,10 +75,15 @@ namespace tally {
             sender->GetSerial()->printf("Error: %s\n", tally::settings::lastError());
     }
 
-    void cmd_reload(SerialCommands* sender)
+    void cmd_load(SerialCommands* sender)
     {
         tally::settings::load();
         sender->GetSerial()->println(F("OK"));
+    }
+
+    void cmd_restart(SerialCommands* sender)
+    {
+        ESP.restart();
     }
 
     void cmd_help(SerialCommands* sender)
@@ -89,8 +95,8 @@ namespace tally {
     SerialCommand cmd_update_("u", cmd_update);
     SerialCommand cmd_commit_("c", cmd_commit);
     SerialCommand cmd_help_("?", cmd_help);
-    SerialCommand cmd_reload_("r", cmd_reload);
-
+    SerialCommand cmd_load_("l", cmd_load);
+    SerialCommand cmd_restart_("r", cmd_restart);
     
     void init(void) {
         Serial.println(F("Welcome to GoTally serial interface"));
@@ -98,7 +104,8 @@ namespace tally {
         serial_commands_.AddCommand(&cmd_query_);
         serial_commands_.AddCommand(&cmd_update_);
         serial_commands_.AddCommand(&cmd_commit_);
-        serial_commands_.AddCommand(&cmd_reload_);
+        serial_commands_.AddCommand(&cmd_load_);
+        serial_commands_.AddCommand(&cmd_restart_);
         serial_commands_.AddCommand(&cmd_help_);
     }
 

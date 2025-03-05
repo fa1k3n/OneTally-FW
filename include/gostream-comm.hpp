@@ -34,7 +34,7 @@ namespace comm {
   } stateT;
 
   bool init(Client& c);
-  bool connect(IPAddress address, uint16_t port);
+  bool connect(IPAddress address, uint16_t port, uint8_t maxTries);
   bool sendMessage(String message);
   bool receiveMessages();
   void handleMessage(JsonDocument& doc);

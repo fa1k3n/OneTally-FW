@@ -13,19 +13,24 @@ namespace comm {
     return true;
   }
 
-  bool connect(IPAddress address, uint16_t port) {
+  bool connect(IPAddress address, uint16_t port, uint8_t maxTries) {
     tally::settings::update("/state/status", "connecting");
     Serial.print("Gostream IP: ");
     Serial.println(address.toString());
 
-   while(!client_->connect(address, port)) {
-        // TODO: Max number of tries then return false if not connected
-      Serial.println("Failed to connect to GoStream");
-      delay(1000);
+    Serial.print("Connecting to GoStream.");
+    uint8_t i = 0;
+    while(!client_->connect(address, port) && i++ < maxTries) {
+      Serial.print(".");
     }
-
-    Serial.println(F("Connected to GoStream"));
-    tally::settings::update("/state/status", "connected");
+    if(client_->connected()) {
+      Serial.println(F("OK"));
+      tally::settings::update("/state/status", "connected");
+    } else {
+      Serial.println(F("ERROR"));
+      return false;
+    }
+    
     return true;
   }
 
@@ -140,7 +145,6 @@ namespace comm {
     receiveMessages();
     int nofMessages = messageQueue.size();
     while(messageQueue.size() > 0) {
-      Serial.println("HANDLE MESSAGE");
       JsonDocument* tmp = messageQueue.front();
       messageQueue.pop();
       handleMessage(*tmp);

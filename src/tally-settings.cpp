@@ -14,11 +14,12 @@ namespace tally {
 
         void init () {
             preferences.begin("GoTally", false); 
-         /* 
+         /*
             settingsBank["state"]["status"] = "disconnected";
             settingsBank["state"]["dhcpAddress"] = "";
             settingsBank["debug"] = false;
             settingsBank["srcId"] = 0;
+            settingsBank["smartMode"] = true;
             settingsBank["gostream"]["address"] = "127.0.0.1";
             settingsBank["gostream"]["port"] = 19010;
             settingsBank["tally"]["led"]["brightness"] = 100;
@@ -77,6 +78,7 @@ namespace tally {
                 errStr_ = F("Error: Malformed parameter address");
                 return false;
             }
+            
             char* copy = strdup(path);
             char *t = strtok(copy, "/");
             JsonVariant tmp = settingsBank;
@@ -96,13 +98,26 @@ namespace tally {
                         foundObject.set(false);
                     } else if (all_of(value.begin(), value.end(), ::isdigit)) {
                         foundObject.set(atoi(value.c_str()));
-                    } else 
+                    } else {
                         foundObject.set(value);
+                    }
+                        
                 }
             }
             free(copy);
             return true;
         }
 
+        bool update(const char* path, const char* value) {
+            return update(path, std::string(value));        
+        }
+
+        bool update(const char* path, int value) {
+            return update(path, std::to_string(value));        
+        }
+
+        bool update(const char* path, bool value) {
+            return update(path, std::to_string(value));        
+        }
     }
 }
