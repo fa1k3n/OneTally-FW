@@ -46,7 +46,7 @@ namespace tally {
             if(status.compare("configuration") == 0) {
                 // Configuration mode
                 setPixelColor(255, 255, 0);
-            } else if(status.compare("searching") == 0 || status.compare("attached") == 0 || status.compare("connecting") == 0) {
+            } else if(status.compare("searching") == 0 || status.compare("connecting") == 0) {
                 // Configuration mode    
                 setPixelColor(0, 0, 255);
             } else if(tallyState == 2) {

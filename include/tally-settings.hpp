@@ -8,6 +8,7 @@ namespace tally {
         void init();
         bool commit();
         bool load();
+        bool reset();
 
         template<typename T> std::optional<T> query(const char* path);
 

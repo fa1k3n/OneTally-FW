@@ -14,6 +14,7 @@ namespace tally {
         sender->GetSerial()->println("c - commits current settings to persistent memory");
         sender->GetSerial()->println("l - load nonpersisten settings to values from persistent memory");
         sender->GetSerial()->println("r - restarts the tally");
+        sender->GetSerial()->println("d - loads factory settings");
         sender->GetSerial()->println("? - prints help menu");
      }
 
@@ -86,6 +87,18 @@ namespace tally {
         ESP.restart();
     }
 
+    void cmd_default(SerialCommands* sender)
+    {
+        char* reallySure = sender->Next();
+        if (*reallySure != '!')
+        {
+            sender->GetSerial()->println(F("Error: to reset the settings you need to add a ! after the command"));
+            return;
+        }
+        tally::settings::reset();
+        ESP.restart();
+    }
+
     void cmd_help(SerialCommands* sender)
     {
         printHelp(sender);
@@ -97,6 +110,7 @@ namespace tally {
     SerialCommand cmd_help_("?", cmd_help);
     SerialCommand cmd_load_("l", cmd_load);
     SerialCommand cmd_restart_("r", cmd_restart);
+    SerialCommand cmd_default_("d", cmd_default);
     
     void init(void) {
         Serial.println(F("Welcome to GoTally serial interface"));
@@ -107,6 +121,7 @@ namespace tally {
         serial_commands_.AddCommand(&cmd_load_);
         serial_commands_.AddCommand(&cmd_restart_);
         serial_commands_.AddCommand(&cmd_help_);
+        serial_commands_.AddCommand(&cmd_default_);
     }
 
     void read(void) {

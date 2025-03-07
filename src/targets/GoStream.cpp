@@ -1,0 +1,235 @@
+#include "GoStream.hpp"
+#include <CRC16.h>
+#include <algorithm>
+#include <mutex>
+
+#define SSRC_ID 5
+
+// Transition sources
+#define USK 1
+#define DSK 2
+#define BKG 4
+
+// USK stuff
+#define LUMA 0
+#define CHROMA 1
+#define KEYPATTERN 2
+#define PIP 3
+
+namespace target {
+
+    std::mutex pingMutex;
+
+    int nofPingsSinceLastMessage = 0;
+    TaskHandle_t pingTask;
+    void pingWorker(void *pvParameters) {
+        GoStream* target = (GoStream*)pvParameters;
+        while(1) {
+            target->ping();
+            delay(1000);
+        }
+    }
+
+    GoStream::GoStream(Client& client) : Target(client) {
+        xTaskCreatePinnedToCore(
+            pingWorker, "pinger", 10000, (void*)this, 1, &pingTask, 0);
+    }
+
+    void GoStream::ping() {
+        pingMutex.lock();
+        nofPingsSinceLastMessage++;
+        sendMessage("pvwIndex");
+        pingMutex.unlock();
+    }
+
+    bool GoStream::connect(IPAddress address, int numRetries) {
+        if(client_->connected()) return true;
+        address_ = address;
+        port_ = 19010;
+        uint8_t i = 0;
+        while(!client_->connect(address_, port_) && i++ <= numRetries) {}
+
+        if(client_->connected()) {
+            sendMessage("pvwIndex");
+            sendMessage("keyOnAir");
+            sendMessage("pgmIndex");
+            sendMessage("autoTransition");
+            sendMessage("superSourceSource1");
+            sendMessage("superSourceSource2");
+            sendMessage("superSourceBackground");
+            sendMessage("pipSource");
+            sendMessage("upStreamKeyType");
+            sendMessage("transitionSource");
+        }
+        return client_->connected();
+    }
+
+    std::vector<uint8_t> GoStream::onPgm() {
+        std::vector<uint8_t> srcs = { state_.pgmId };
+
+        // Supersource 
+        if(state_.pgmId == SSRC_ID) {
+            // TODO: Check what ssrc sources are visible and enabled before this
+            srcs.push_back(state_.ssrcSrc1Id);
+            srcs.push_back(state_.ssrcSrc2Id);
+            srcs.push_back(state_.ssrcBkgId);
+        }
+
+        // USK
+        if(state_.uskActive) {
+            srcs.push_back(state_.uskFillSrcId[state_.uskType]);
+        }
+
+        // Transition, both sources "live" on pgm
+        if(state_.transitionOngoing) {
+            srcs.push_back(state_.pvwId);
+        }
+
+        return srcs;
+    }
+
+    std::vector<uint8_t> GoStream::onPvw() {
+        std::vector<uint8_t> srcs = { state_.pvwId };
+         // Supersource 
+        if(state_.pvwId == SSRC_ID) {
+            // TODO: Check what ssrc sources are visible and enabled before this
+            srcs.push_back(state_.ssrcSrc1Id);
+            srcs.push_back(state_.ssrcSrc2Id);
+            srcs.push_back(state_.ssrcBkgId);
+        }
+
+        // USK
+        if(state_.transitionSource & USK)
+            srcs.push_back(state_.uskFillSrcId[state_.uskType]);
+
+        // Transition, both sources "live" on pvw
+        if(state_.transitionOngoing)
+            srcs.push_back(state_.pgmId);
+
+        return srcs;
+    }
+
+    bool GoStream::sendMessage(String message) {
+        JsonDocument json;
+        uint8_t packet[128];
+        json["id"] = message ;
+        json["type"] = "get";
+        memset(packet, 0, 128);  
+        size_t size = serializeJson(json, &packet[5], 119);
+
+        packet[0] = 0xeb;
+        packet[1] = 0xa6;
+        packet[2] = 0;
+        packet[3] = size + 2;    // Ugly LE hardcode 
+        packet[4] = 0; 
+
+        CRC16 crc(CRC16_MODBUS_POLYNOME,
+                CRC16_MODBUS_INITIAL,
+                CRC16_MODBUS_XOR_OUT,
+                CRC16_MODBUS_REV_IN,
+                CRC16_MODBUS_REV_OUT);
+        for(int i = 0; i < size + 5; i++) {
+        uint8_t c = packet[i];
+            crc.add(c);
+        }
+        uint16_t crcSum = crc.calc();
+        packet[size + 5] = ((uint8_t)crcSum  & 0XFF);
+        packet[size + 6] = ((uint8_t)(crcSum >> 8) & 0XFF);
+        client_->write(packet, size + 7);
+        return true;
+    }
+
+    bool GoStream::receiveMessages() {
+        while(client_->available() > 0) {
+            int c = client_->peek();
+            
+            if((char)c != '{') {
+                client_->read();
+            } else {
+                auto* msg = new JsonDocument();
+                DeserializationError error = deserializeJson(*msg, *client_);
+                messageQueue_.push(msg);
+
+                // JSON misses last char and then read CRC 
+                client_->read();
+                client_->read();
+                client_->read();
+
+                if (error) {
+                Serial.print(F("deserializeJson() failed: "));
+                Serial.println(error.f_str());
+                return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    #define DEBUG_PRINT(val) {}; //{ if(tally::settings::query<bool>("/debug")) { Serial.print(#val); Serial.print(": "); Serial.println(val); }} 
+    void GoStream::handleMessage(JsonDocument& doc) {
+        String command = String((doc)["id"].as<const char *>());
+        JsonArray value =  (doc)["value"].as<JsonArray>();
+
+        if(command == String("pvwIndex")) {
+        state_.pvwId = value[0];
+        DEBUG_PRINT(state.pvwId);
+        } else if(command == String("pgmIndex")) {
+        state_.pgmId = value[0];
+        DEBUG_PRINT(state.pgmId);
+        } else if(command == String("autoTransition")) {
+        state_.transitionOngoing = value[0] == 1 ? true : false;
+        DEBUG_PRINT(state.transitionOngoing);
+        } else if(command == String("superSourceSource1")) {
+        state_.ssrcSrc1Id = value[0];
+        DEBUG_PRINT(state.ssrcSrc1Id);
+        } else if(command == String("superSourceSource2")) {
+        state_.ssrcSrc2Id = value[0];
+        DEBUG_PRINT(state.ssrcSrc2Id);
+        } else if(command == String("superSourceBackground")) {
+        state_.ssrcBkgId = value[0];
+        DEBUG_PRINT(state.ssrcBkgId);
+        } else if(command == String("upStreamKeyType")) {
+        state_.uskType = value[0];
+        DEBUG_PRINT(state.uskType);
+        } else if(command == String("pipSource")) {
+        state_.uskFillSrcId[PIP] = value[0];
+        DEBUG_PRINT(state.pipSrcId);
+        } else if(command == String("keyOnAir")) {
+        state_.uskActive = value[0] == 1 ? true : false;
+        DEBUG_PRINT(state.uskActive);
+        } else if(command == String("transitionSource")) {
+        state_.transitionSource = value[0];
+        DEBUG_PRINT(state.transitionSource);
+        } else if(command == String("upStreamKeyFillKeyType")) {
+        int type = value[0].as<int>();
+        state_.uskFillSrcId[type] = value[1];
+        if(type == LUMA)
+            state_.lumaKeySrcId = value[2];
+        DEBUG_PRINT(state.transitionSource);
+        } else {
+        Serial.print("Unknown command "); Serial.print(command); Serial.print(": "); Serial.println(value[0].as<int>());
+        }
+    }
+
+    bool GoStream::receiveAndHandleMessages() {
+        receiveMessages();
+        int nofMessages = messageQueue_.size();
+        while(messageQueue_.size() > 0) {
+            JsonDocument* tmp = messageQueue_.front();
+            messageQueue_.pop();
+            handleMessage(*tmp);
+            delete tmp;
+        }
+        // Check for connection timeout
+        pingMutex.lock();
+        if(nofMessages > 0) {
+            nofPingsSinceLastMessage = 0;
+        } else {
+            if(nofPingsSinceLastMessage == 5) {
+                client_->stop();
+            }
+        }
+        pingMutex.unlock();
+        return nofMessages > 0;
+    }
+}

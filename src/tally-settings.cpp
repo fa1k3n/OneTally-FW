@@ -15,10 +15,14 @@ namespace tally {
         }
 
         void init () {
-            preferences.begin("GoTally", false); 
-         /*
+            preferences.begin("GoTally", false);
+            load();
+        }
+
+        bool reset() {
             settingsBank["state"]["status"] = "disconnected";
             settingsBank["state"]["dhcpAddress"] = "";
+            settingsBank["state"]["tally"] = (int)0;
             settingsBank["debug"] = false;
             settingsBank["srcId"] = 0;
             settingsBank["smartMode"] = true;
@@ -27,16 +31,12 @@ namespace tally {
             settingsBank["tally"]["led"]["brightness"] = 100;
             settingsBank["tally"]["wifi"]["ssid"] = "";
             settingsBank["tally"]["wifi"]["pwd"] = "";
-            settingsBank["tally"]["wifi"]["useDHCP"] = false;
+            settingsBank["tally"]["wifi"]["useDHCP"] = true;
             settingsBank["tally"]["wifi"]["address"] = "127.0.0.1";
             settingsBank["tally"]["wifi"]["gateway"] = "127.0.0.1";
             settingsBank["tally"]["wifi"]["netmask"] = "255.255.255.0";
             commit();
-        */
-        
-            load();
-
-            settingsBank["state"]["tally"] = (int)0;
+            return true;
         }
 
         bool commit() {  
@@ -196,7 +196,7 @@ namespace tally {
         }
 
         bool update(const char* path, bool value) {
-            return update(path, std::to_string(value));        
+            return update(path, value == true ? "true" : "false");        
         }
     }
 }
