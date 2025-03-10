@@ -131,7 +131,6 @@ namespace tally {
     void cmd_restart(SerialCommands* sender)
     {
         char* reallySure = sender->Next();
-        Serial.printf("has changes %d\n", tally::settings::hasChanges());
         if (tally::settings::hasChanges() && (!reallySure || *reallySure != '!'))
         {
             Error_(F("There are unsaved settings that will be overwritted. Save settings or add ! after the command to disregard this error message"), sender);
