@@ -5,9 +5,9 @@
 namespace target {
     class GoStream: public Target {
     public:
-        GoStream(Client& client);
+        GoStream(IPAddress address, uint16_t port = 19010);
         ~GoStream() {}
-        bool connect(IPAddress address, int numRetries = 0) override;
+        bool connect(Client* client, int numRetries = 0) override;
         
         std::vector<uint8_t> onPgm() override;
         std::vector<uint8_t> onPvw() override;
@@ -19,10 +19,7 @@ namespace target {
         bool sendMessage(String message);
         bool receiveMessages();
         void handleMessage(JsonDocument& doc);
-    
 
-        IPAddress address_;
-        uint16_t port_;
         std::queue<JsonDocument*> messageQueue_;
 
         struct {

@@ -10,7 +10,7 @@ namespace tally {
         constexpr int LED1_PWR_PIN = 19;
         constexpr int LED2_CTRL_PIN = 14;
         constexpr int LED2_PWR_PIN = 12;
-        constexpr int NOF_PIXELS = 1;
+        constexpr int NOF_PIXELS = 2;
         
         std::vector<Adafruit_NeoPixel*> leds;
  
@@ -22,9 +22,10 @@ namespace tally {
             digitalWrite(LED1_PWR_PIN, HIGH);
             pinMode(LED2_PWR_PIN, OUTPUT);
             digitalWrite(LED2_PWR_PIN, HIGH);
-
+            
             delay(100);
             begin();
+            clear();
         }
 
         void begin() {
@@ -38,15 +39,17 @@ namespace tally {
         bool goingDown = true;
         void show() {
              // Light the candles, if both PGM and PWV are active then only light PGM  
-            int brightness = tally::settings::query<int>("/tally/led/brightness").value();
-            auto status = tally::settings::query<std::string>("/state/status").value();
-            int tallyState = tally::settings::query<int>("/state/tally").value();
-            setBrightness(brightness);
+            auto brightness = tally::settings::query<int>("/tally/led/brightness");
+            auto status = tally::settings::query<std::string>("/state/status");
+            auto tallyState = tally::settings::query<int>("/state/tally");
+            if(!brightness || !status || !tallyState) return;
 
-            if(status.compare("configuration") == 0) {
+            setBrightness(brightness.value());
+
+            if(status.value().compare("configuration") == 0) {
                 // Configuration mode
                 setPixelColor(255, 255, 0);
-            } else if(status.compare("searching") == 0 || status.compare("connecting") == 0) {
+            } else if(status.value().compare("searching") == 0 || status.value().compare("connecting") == 0) {
                 // Configuration mode    
                 setPixelColor(0, 0, 255);
             } else if(tallyState == 2) {
@@ -60,7 +63,10 @@ namespace tally {
         }
 
         void setPixelColor(uint8_t r, uint8_t g, uint8_t b) {
-            std::for_each(leds.begin(), leds.end(), [r, g, b](Adafruit_NeoPixel* led) { led->setPixelColor(NOF_PIXELS - 1, r, g, b); });
+            std::for_each(leds.begin(), leds.end(), [r, g, b](Adafruit_NeoPixel* led) { 
+                for(int i = 0; i < NOF_PIXELS; i ++)
+                    led->setPixelColor(i, r, g, b); 
+            });
         }
 
         void setBrightness(uint8_t brightness) {

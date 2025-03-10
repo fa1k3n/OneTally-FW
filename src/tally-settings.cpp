@@ -9,6 +9,7 @@ namespace tally {
         Preferences preferences;
         const __FlashStringHelper* errStr_;
         std::mutex settingsMutex;
+        bool hasUnsavedChanges = false;
 
         const __FlashStringHelper* lastError() {
             return errStr_;
@@ -18,6 +19,11 @@ namespace tally {
             preferences.begin("GoTally", false);
             load();
         }
+
+        bool hasChanges() {
+            return hasUnsavedChanges;
+        }
+
 
         bool reset() {
             settingsBank["state"]["status"] = "disconnected";
@@ -43,6 +49,7 @@ namespace tally {
             std::string settings_str;
             serializeJson(settingsBank, settings_str);
             preferences.putString("settings", settings_str.c_str());
+            hasUnsavedChanges = false;
             return true;
         }
 
@@ -51,14 +58,22 @@ namespace tally {
             settingsMutex.lock();
             deserializeJson(settingsBank, settings_str);
             settingsMutex.unlock();
+            hasUnsavedChanges = false;
             return true;
         }
 
         bool query_(const char* path, JsonVariant& var) {
+            if(settingsBank.isNull()) {
+                Serial.printf("Settings not available %s\n", path);
+                errStr_ = F("Error: Settings not available");
+                return false;
+            }
+
             if(strchr(path, '/') == nullptr) {
                 errStr_ = F("Error: Malformed parameter address");
                 return false;
             }
+
             // Split nodes
             char* copy = strdup(path);
             char *t = strtok(copy, "/");
@@ -82,17 +97,23 @@ namespace tally {
         }
 
         bool update(const char* path, std::string value) {
-            // Split nodes
+            if(settingsBank.isNull()) {
+                Serial.println("Settings not loaded");
+                errStr_ = F("Error: Settings not available");
+                return false;
+            }
+
             if(strchr(path, '/') == nullptr) {
                 errStr_ = F("Error: Malformed parameter address");
                 return false;
             }
-            
+
+            // Split nodes
             char* copy = strdup(path);
             char *t = strtok(copy, "/");
             settingsMutex.lock();
             JsonVariant tmp = settingsBank;
-            while (t != nullptr) {           
+            while (t != nullptr) {
                 JsonVariant foundObject = tmp[t];
                 if (foundObject.isNull()) {
                     free(copy);
@@ -117,6 +138,12 @@ namespace tally {
             }
             free(copy);
             settingsMutex.unlock();
+
+            if (std::string(path).rfind("/state", 0) != 0) {
+                // Dont mark the state node as changes
+                hasUnsavedChanges = true;
+            }
+
             return true;
         }
 

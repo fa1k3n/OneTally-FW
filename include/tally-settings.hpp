@@ -9,6 +9,7 @@ namespace tally {
         bool commit();
         bool load();
         bool reset();
+        bool hasChanges();
 
         template<typename T> std::optional<T> query(const char* path);
 

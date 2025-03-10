@@ -1,7 +1,6 @@
 #include "GoStream.hpp"
 #include <CRC16.h>
 #include <algorithm>
-#include <mutex>
 
 #define SSRC_ID 5
 
@@ -18,37 +17,11 @@
 
 namespace target {
 
-    std::mutex pingMutex;
-
-    int nofPingsSinceLastMessage = 0;
-    TaskHandle_t pingTask;
-    void pingWorker(void *pvParameters) {
-        GoStream* target = (GoStream*)pvParameters;
-        while(1) {
-            target->ping();
-            delay(1000);
-        }
+    GoStream::GoStream(IPAddress address, uint16_t port) : Target(address, port) {
     }
-
-    GoStream::GoStream(Client& client) : Target(client) {
-        xTaskCreatePinnedToCore(
-            pingWorker, "pinger", 10000, (void*)this, 1, &pingTask, 0);
-    }
-
-    void GoStream::ping() {
-        pingMutex.lock();
-        nofPingsSinceLastMessage++;
-        sendMessage("pvwIndex");
-        pingMutex.unlock();
-    }
-
-    bool GoStream::connect(IPAddress address, int numRetries) {
-        if(client_->connected()) return true;
-        address_ = address;
-        port_ = 19010;
-        uint8_t i = 0;
-        while(!client_->connect(address_, port_) && i++ <= numRetries) {}
-
+    
+    bool GoStream::connect(Client* client, int numRetries) {
+        Target::connect(client, numRetries);        
         if(client_->connected()) {
             sendMessage("pvwIndex");
             sendMessage("keyOnAir");
@@ -220,16 +193,6 @@ namespace target {
             handleMessage(*tmp);
             delete tmp;
         }
-        // Check for connection timeout
-        pingMutex.lock();
-        if(nofMessages > 0) {
-            nofPingsSinceLastMessage = 0;
-        } else {
-            if(nofPingsSinceLastMessage == 5) {
-                client_->stop();
-            }
-        }
-        pingMutex.unlock();
         return nofMessages > 0;
     }
 }

@@ -15,7 +15,7 @@ namespace comm {
 
   bool connect(IPAddress address, uint16_t port, uint8_t maxTries) {
     tally::settings::update("/state/status", "connecting");
-    Serial.print("Connecting to GoStream.");
+    Serial.print("Connecting to device.");
     uint8_t i = 0;
     while(!client_->connect(address, port) && i++ < maxTries) {
       Serial.print(".");
