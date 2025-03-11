@@ -1,5 +1,6 @@
 #include "tally-led.hpp"
 #include "tally-settings.hpp"
+#include "tally-serial.hpp"
 #include <vector>
 #include <algorithm> 
 
@@ -15,14 +16,26 @@ namespace tally {
         std::vector<Adafruit_NeoPixel*> leds;
  
         void init() {
-            leds.push_back(new Adafruit_NeoPixel(NOF_PIXELS, LED1_CTRL_PIN, NEO_RGB + NEO_KHZ800));
-            leds.push_back(new Adafruit_NeoPixel(NOF_PIXELS, LED2_CTRL_PIN, NEO_RGB + NEO_KHZ800));
+            auto led0_count_var = tally::settings::query<int>("/board/led/0/count");
+            auto led0_ctrl_var = tally::settings::query<int>("/board/led/0/ctrlPin");
+            auto led0_pwr_var = tally::settings::query<int>("/board/led/0/pwrPin");
+            if(led0_count_var && led0_ctrl_var && led0_pwr_var ) {
+                leds.push_back(new Adafruit_NeoPixel(led0_count_var.value(), led0_ctrl_var.value(), NEO_RGB + NEO_KHZ800));
+                pinMode(led0_pwr_var.value(), OUTPUT);
+                digitalWrite(led0_pwr_var.value(), HIGH);
+            } else {
+                tally::serial::Println("Warning: strange led settings found");
+            }
 
-            pinMode(LED1_PWR_PIN, OUTPUT);
-            digitalWrite(LED1_PWR_PIN, HIGH);
-            pinMode(LED2_PWR_PIN, OUTPUT);
-            digitalWrite(LED2_PWR_PIN, HIGH);
-            
+            auto led1_count_var = tally::settings::query<int>("/board/led/1/count");
+            auto led1_ctrl_var = tally::settings::query<int>("/board/led/1/ctrlPin");
+            auto led1_pwr_var = tally::settings::query<int>("/board/led/1/pwrPin");
+            if(led1_count_var && led1_ctrl_var && led1_pwr_var ) {
+                leds.push_back(new Adafruit_NeoPixel(led1_count_var.value(), led1_ctrl_var.value(), NEO_RGB + NEO_KHZ800));
+                pinMode(led1_pwr_var.value(), OUTPUT);
+                digitalWrite(led1_pwr_var.value(), HIGH);
+            }
+
             delay(100);
             begin();
             clear();
@@ -36,15 +49,18 @@ namespace tally {
             std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { led->clear(); });
         }
 
-        bool goingDown = true;
         void show() {
              // Light the candles, if both PGM and PWV are active then only light PGM  
+            auto enabled = tally::settings::query<bool>("/board/led/0/enable");
             auto brightness = tally::settings::query<int>("/tally/led/brightness");
             auto status = tally::settings::query<std::string>("/state/status");
             auto tallyState = tally::settings::query<int>("/state/tally");
-            if(!brightness || !status || !tallyState) return;
+            if(!brightness || !status || !tallyState || !enabled) return;
 
-            setBrightness(brightness.value());
+            if(enabled.value())
+                setBrightness(brightness.value());
+            else 
+                setBrightness(0);
 
             if(status.value().compare("configuration") == 0) {
                 // Configuration mode

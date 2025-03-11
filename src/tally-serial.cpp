@@ -2,6 +2,7 @@
 #include "tally-settings.hpp"
 #include <string.h>
 
+extern void restart();
 namespace tally {
   namespace serial {
     char serial_command_buffer_[128];
@@ -128,6 +129,7 @@ namespace tally {
         OK_(sender);
     }
 
+
     void cmd_restart(SerialCommands* sender)
     {
         char* reallySure = sender->Next();
@@ -136,7 +138,7 @@ namespace tally {
             Error_(F("There are unsaved settings that will be overwritted. Save settings or add ! after the command to disregard this error message"), sender);
             return;
         }
-        ESP.restart();
+        restart();
     }
 
     void cmd_default(SerialCommands* sender)

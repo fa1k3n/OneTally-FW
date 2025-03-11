@@ -1,11 +1,13 @@
 #include "tally-settings.hpp"
+#include "tally-firmware.hpp"
 #include <Preferences.h>
 #include <mutex>
 
-JsonDocument settingsBank;
+
 
 namespace tally {
     namespace settings {
+        JsonDocument settingsBank;
         Preferences preferences;
         const __FlashStringHelper* errStr_;
         std::mutex settingsMutex;
@@ -24,11 +26,10 @@ namespace tally {
             return hasUnsavedChanges;
         }
 
-
         bool reset() {
-            settingsBank["state"]["status"] = "disconnected";
-            settingsBank["state"]["dhcpAddress"] = "";
-            settingsBank["state"]["tally"] = (int)0;
+            settingsMutex.lock();
+            preferences.clear();
+            settingsBank.clear();
             settingsBank["debug"] = false;
             settingsBank["srcId"] = 0;
             settingsBank["smartMode"] = true;
@@ -41,7 +42,20 @@ namespace tally {
             settingsBank["tally"]["wifi"]["address"] = "127.0.0.1";
             settingsBank["tally"]["wifi"]["gateway"] = "127.0.0.1";
             settingsBank["tally"]["wifi"]["netmask"] = "255.255.255.0";
+            settingsBank["board"]["led"]["0"]["enable"] = true;
+            settingsBank["board"]["led"]["0"]["ctrlPin"] = 18;
+            settingsBank["board"]["led"]["0"]["pwrPin"] = 19;
+            settingsBank["board"]["led"]["0"]["count"] = 1;
+            settingsBank["board"]["led"]["1"]["enable"] = true;
+            settingsBank["board"]["led"]["1"]["ctrlPin"] = 14;
+            settingsBank["board"]["led"]["1"]["pwrPin"] = 12;
+            settingsBank["board"]["led"]["1"]["count"] = 1;
+            settingsBank["state"]["status"] = "disconnected";
+            settingsBank["state"]["dhcpAddress"] = "";
+            settingsBank["state"]["tally"] = (int)0;
+            settingsBank["firmware"]["version"] = tally::firmware::version;
             commit();
+            settingsMutex.unlock();
             return true;
         }
 
@@ -55,9 +69,15 @@ namespace tally {
 
         bool load() {
             std::string settings_str = preferences.getString("settings", "").c_str();
-            settingsMutex.lock();
-            deserializeJson(settingsBank, settings_str);
-            settingsMutex.unlock();
+            if(settings_str.length() > 0) {
+                settingsMutex.lock();
+                deserializeJson(settingsBank, settings_str);
+                settingsMutex.unlock();
+            } else {
+                Serial.println("No settings found in flash! Writing default");
+                reset();  // No settings in flash, create basic
+            }
+            
             hasUnsavedChanges = false;
             return true;
         }

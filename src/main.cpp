@@ -94,9 +94,16 @@ void connect() {
 }
 
 void ledWorker(void *pvParameters) {
-  tally::led::init();
   while(1) {
     tally::led::show();
+    delay(200);
+  }
+}
+
+void serialWorker(void *pvParameters) {
+  while(1) {
+    tally::serial::read();
+    delay(200);
   }
 }
 
@@ -104,9 +111,27 @@ void setup() {
   Serial.begin(921600);
   initializeDevice();
   xTaskCreatePinnedToCore(
-    ledWorker, "LED worker", 10000, NULL, 1, &ledTask, 0);
+    ledWorker, "LED worker", 10000, NULL, 2, &ledTask, 0);
+  xTaskCreatePinnedToCore(
+    serialWorker, "Serial worker", 10000, NULL, 1, NULL, 0);
   connect();
 
+}
+
+void restart() {
+  // Notify pending shutdown
+  tally::serial::Println("Info: tally is preparing to restart");
+
+  // Disconnect from switcher
+  if(switcher && switcher->connected()) switcher->disconnect();
+
+  // clear leds
+  tally::led::clear();
+
+  delay(300);
+  tally::serial::Println("Info: tally is restarting");
+
+  ESP.restart();
 }
 
 void loop() { 
@@ -139,6 +164,6 @@ void loop() {
     }
   }
 
-  tally::serial::read();
+ // tally::serial::read();
   updateTally();
 }
