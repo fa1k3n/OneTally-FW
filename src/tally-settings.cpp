@@ -46,10 +46,12 @@ namespace tally {
             settingsBank["board"]["led"]["0"]["ctrlPin"] = 18;
             settingsBank["board"]["led"]["0"]["pwrPin"] = 19;
             settingsBank["board"]["led"]["0"]["count"] = 1;
+            settingsBank["board"]["led"]["0"]["invert"] = false;
             settingsBank["board"]["led"]["1"]["enable"] = true;
             settingsBank["board"]["led"]["1"]["ctrlPin"] = 14;
             settingsBank["board"]["led"]["1"]["pwrPin"] = 12;
             settingsBank["board"]["led"]["1"]["count"] = 1;
+            settingsBank["board"]["led"]["1"]["invert"] = false;
             settingsBank["state"]["status"] = "disconnected";
             settingsBank["state"]["dhcpAddress"] = "";
             settingsBank["state"]["tally"] = (int)0;

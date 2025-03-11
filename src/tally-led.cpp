@@ -19,8 +19,9 @@ namespace tally {
             auto led0_count_var = tally::settings::query<int>("/board/led/0/count");
             auto led0_ctrl_var = tally::settings::query<int>("/board/led/0/ctrlPin");
             auto led0_pwr_var = tally::settings::query<int>("/board/led/0/pwrPin");
-            if(led0_count_var && led0_ctrl_var && led0_pwr_var ) {
-                leds.push_back(new Adafruit_NeoPixel(led0_count_var.value(), led0_ctrl_var.value(), NEO_RGB + NEO_KHZ800));
+            auto led0_invert_var = tally::settings::query<bool>("/board/led/0/invert");
+            if(led0_count_var && led0_ctrl_var && led0_pwr_var && led0_invert_var ) {
+                leds.push_back(new Adafruit_NeoPixel(led0_count_var.value(), led0_ctrl_var.value(), (led0_invert_var.value() ? NEO_GRB : NEO_RGB) + NEO_KHZ800));
                 pinMode(led0_pwr_var.value(), OUTPUT);
                 digitalWrite(led0_pwr_var.value(), HIGH);
             } else {
@@ -30,8 +31,9 @@ namespace tally {
             auto led1_count_var = tally::settings::query<int>("/board/led/1/count");
             auto led1_ctrl_var = tally::settings::query<int>("/board/led/1/ctrlPin");
             auto led1_pwr_var = tally::settings::query<int>("/board/led/1/pwrPin");
-            if(led1_count_var && led1_ctrl_var && led1_pwr_var ) {
-                leds.push_back(new Adafruit_NeoPixel(led1_count_var.value(), led1_ctrl_var.value(), NEO_RGB + NEO_KHZ800));
+            auto led1_invert_var = tally::settings::query<bool>("/board/led/1/invert");
+            if(led1_count_var && led1_ctrl_var && led1_pwr_var && led1_invert_var ) {
+                leds.push_back(new Adafruit_NeoPixel(led1_count_var.value(), led1_ctrl_var.value(), (led1_invert_var.value() ? NEO_GRB : NEO_RGB) + NEO_KHZ800));
                 pinMode(led1_pwr_var.value(), OUTPUT);
                 digitalWrite(led1_pwr_var.value(), HIGH);
             }
@@ -80,7 +82,7 @@ namespace tally {
 
         void setPixelColor(uint8_t r, uint8_t g, uint8_t b) {
             std::for_each(leds.begin(), leds.end(), [r, g, b](Adafruit_NeoPixel* led) { 
-                for(int i = 0; i < NOF_PIXELS; i ++)
+                for(uint16_t i = 0; i < led->numPixels(); i ++)
                     led->setPixelColor(i, r, g, b); 
             });
         }
