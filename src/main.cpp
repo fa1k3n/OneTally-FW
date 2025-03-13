@@ -3,6 +3,7 @@
 #include "WiFi.h"
 
 #include "GoStream.hpp"
+#include "OBS.hpp"
 
 #include "tally-serial.hpp"
 #include "tally-settings.hpp"
@@ -10,7 +11,7 @@
 #include "tally-webui.hpp"
 
 WiFiClient client, webclient;
-target::GoStream* switcher = nullptr;
+target::Target* switcher = nullptr;
 WiFiServer server(80);
 TaskHandle_t ledTask;
 
@@ -24,7 +25,7 @@ void initializeDevice() {
 
 void updateTally() {
   if(switcher) {
-    int srcId = tally::settings::query<int>("/srcId").value();
+    int srcId = tally::settings::query<int>("/tally/srcId").value();
     auto pvw = switcher->onPvw();
     auto pgm = switcher->onPgm();
     bool pgmOn = std::find(pgm.begin(), pgm.end(), srcId) != pgm.end();
@@ -37,9 +38,9 @@ void updateTally() {
 }
 
 bool setUpWiFi(int maxTries) {
-  auto ssid = tally::settings::query<std::string>("/tally/wifi/ssid");
-  auto pwd = tally::settings::query<std::string>("/tally/wifi/pwd");
-  auto useDHCP =  tally::settings::query<bool>("/tally/wifi/useDHCP");
+  auto ssid = tally::settings::query<std::string>("/network/wifi/ssid");
+  auto pwd = tally::settings::query<std::string>("/network/wifi/pwd");
+  auto useDHCP =  tally::settings::query<bool>("/network/wifi/useDHCP");
 
   if(!ssid || !pwd ||!useDHCP) return false;
 
@@ -52,7 +53,7 @@ bool setUpWiFi(int maxTries) {
   tally::settings::update("/state/status", "searching");
   if(!useDHCP.value()) {
     // STRANGE CODE HERE 
-    const auto tallyAddress = tally::settings::query<IPAddress>("/tally/wifi/address").value();  
+    const auto tallyAddress = tally::settings::query<IPAddress>("/network/wifi/address").value();  
   }
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -82,14 +83,24 @@ void connect() {
   if(WiFi.status() != WL_CONNECTED) {
     // Setup AP
     tally::settings::update("/state/status", "configuration");
-    WiFi.mode(WIFI_OFF);
+    //WiFi.mode(WIFI_OFF);
     WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(IPAddress(192, 168, 172, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
-    WiFi.softAP("GoTally");
+    WiFi.softAPConfig(IPAddress(192, 168, 172, 1), IPAddress(192, 168, 172, 1), IPAddress(255, 255, 255, 0));
+    if(WiFi.softAP("OneTally")) {
+      tally::serial::Print("OneTally AP is ready. WebUi can be found at ");
+      tally::serial::Println(WiFi.localIP().toString().c_str());
+    }
     server.begin();
     tally::webui::init(server);
   } else {
-    switcher = new target::GoStream(tally::settings::query<IPAddress>("/gostream/address").value());
+    bool obsActive = tally::settings::query<bool>("/target/obs/active").value();
+    bool gostreamActive = tally::settings::query<bool>("/target/gostream/active").value();
+    if(gostreamActive)
+      switcher = (target::Target*) new target::GoStream(tally::settings::query<IPAddress>("/target/gostream/address").value());
+    else if(obsActive)
+      switcher = (target::Target*) new target::OBS(tally::settings::query<IPAddress>("/target/obs/address").value(), tally::settings::query<int>("/target/obs/port").value());
+    else
+      tally::serial::Println("Error: multiple active targets, you can only have one target active at a time");
   }
 }
 
@@ -143,27 +154,26 @@ void loop() {
     if(!switcher->connected() && state != "configuration") {
       if(switcher->connect(&client)) {
         tally::settings::update("/state/status", "connected");
-        if(tally::settings::query<bool>("/smartMode").value() && !smartModeInitialized) {
+        if(tally::settings::query<bool>("/tally/smartMode").value() && !smartModeInitialized) {
           delay(500);  // Wait so that we reveice the pvw and pgm status
-          switcher->receiveAndHandleMessages();
+          switcher->receive();
           auto pvwId = switcher->onPvw();
           if(pvwId.size() > 1)
            tally::serial::Println(F("Error: failed to initialize smart mode, more than one source active on preview"));
           else {
-            tally::settings::update("/srcId", pvwId[0]);
+            tally::settings::update("/tally/srcId", pvwId[0]);
             smartModeInitialized = true;
           }
         } 
       } else {
         tally::settings::update("/state/status", "connecting");
       }
-    } else if (state == "configuration") {
-        tally::webui::checkAndServeConnection();
-    } else {
-      switcher->receiveAndHandleMessages();
+    }  else {
+      switcher->receive();
     }
+  } else if (state == "configuration") {
+    tally::webui::checkAndServeConnection();
   }
 
- // tally::serial::read();
   updateTally();
 }

@@ -16,23 +16,22 @@
 #define PIP 3
 
 namespace target {
-
     GoStream::GoStream(IPAddress address, uint16_t port) : Target(address, port) {
     }
     
     bool GoStream::connect(Client* client, int numRetries) {
         Target::connect(client, numRetries);        
         if(client_->connected()) {
-            sendMessage("pvwIndex");
-            sendMessage("keyOnAir");
-            sendMessage("pgmIndex");
-            sendMessage("autoTransition");
-            sendMessage("superSourceSource1");
-            sendMessage("superSourceSource2");
-            sendMessage("superSourceBackground");
-            sendMessage("pipSource");
-            sendMessage("upStreamKeyType");
-            sendMessage("transitionSource");
+            sendMessage_("pvwIndex");
+            sendMessage_("keyOnAir");
+            sendMessage_("pgmIndex");
+            sendMessage_("autoTransition");
+            sendMessage_("superSourceSource1");
+            sendMessage_("superSourceSource2");
+            sendMessage_("superSourceBackground");
+            sendMessage_("pipSource");
+            sendMessage_("upStreamKeyType");
+            sendMessage_("transitionSource");
         }
         return client_->connected();
     }
@@ -82,7 +81,7 @@ namespace target {
         return srcs;
     }
 
-    bool GoStream::sendMessage(String message) {
+    bool GoStream::sendMessage_(String message) {
         JsonDocument json;
         uint8_t packet[128];
         json["id"] = message ;
@@ -112,7 +111,7 @@ namespace target {
         return true;
     }
 
-    bool GoStream::receiveMessages() {
+    bool GoStream::receiveMessages_() {
         while(client_->available() > 0) {
             int c = client_->peek();
             
@@ -139,7 +138,7 @@ namespace target {
     }
 
     #define DEBUG_PRINT(val) {}; //{ if(tally::settings::query<bool>("/debug")) { Serial.print(#val); Serial.print(": "); Serial.println(val); }} 
-    void GoStream::handleMessage(JsonDocument& doc) {
+    void GoStream::handleMessage_(JsonDocument& doc) {
         String command = String((doc)["id"].as<const char *>());
         JsonArray value =  (doc)["value"].as<JsonArray>();
 
@@ -184,13 +183,13 @@ namespace target {
         }
     }
 
-    bool GoStream::receiveAndHandleMessages() {
-        receiveMessages();
+    bool GoStream::receive() {
+        receiveMessages_();
         int nofMessages = messageQueue_.size();
         while(messageQueue_.size() > 0) {
             JsonDocument* tmp = messageQueue_.front();
             messageQueue_.pop();
-            handleMessage(*tmp);
+            handleMessage_(*tmp);
             delete tmp;
         }
         return nofMessages > 0;

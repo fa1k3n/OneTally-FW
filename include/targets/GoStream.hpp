@@ -8,17 +8,15 @@ namespace target {
         GoStream(IPAddress address, uint16_t port = 19010);
         ~GoStream() {}
         bool connect(Client* client, int numRetries = 0) override;
-        
         std::vector<uint8_t> onPgm() override;
         std::vector<uint8_t> onPvw() override;
-        void ping();
-
-        bool receiveAndHandleMessages() override;
+        bool receive() override;
 
     private:
-        bool sendMessage(String message);
-        bool receiveMessages();
-        void handleMessage(JsonDocument& doc);
+        bool sendMessage_(String message);
+        bool receive_();
+        bool receiveMessages_();
+        void handleMessage_(JsonDocument& doc);
 
         std::queue<JsonDocument*> messageQueue_;
 

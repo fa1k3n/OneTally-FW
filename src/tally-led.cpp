@@ -54,7 +54,7 @@ namespace tally {
         void show() {
              // Light the candles, if both PGM and PWV are active then only light PGM  
             auto enabled = tally::settings::query<bool>("/board/led/0/enable");
-            auto brightness = tally::settings::query<int>("/tally/led/brightness");
+            auto brightness = tally::settings::query<int>("/board/led/0/brightness");
             auto status = tally::settings::query<std::string>("/state/status");
             auto tallyState = tally::settings::query<int>("/state/tally");
             if(!brightness || !status || !tallyState || !enabled) return;

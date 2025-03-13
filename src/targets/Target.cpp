@@ -71,6 +71,6 @@ namespace target {
 
     std::vector<uint8_t> Target::onPgm() { return {}; };
     std::vector<uint8_t> Target::onPvw() { return {}; };
-    bool Target::receiveAndHandleMessages() { return false; }
+    bool Target::receive() { return false; }
 
 }

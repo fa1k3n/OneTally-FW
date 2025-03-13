@@ -2,9 +2,13 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <WiFi.h>
 
 #include "tally-webui.hpp"
 #include "tally-settings.hpp"
+
+extern void restart();
+
 namespace tally {
     namespace webui {
         WiFiServer* server_;
@@ -32,39 +36,39 @@ namespace tally {
           "\t\t\tinput:invalid { border-style: dashed; border-color: red}\n"
           "\t\t</style>\n"
           "\t</head>\n"
-          "\t<body onload=\"document.getElementById('manualCfg').hidden = !document.getElementById('manual').checked, document.getElementById('srcid').disabled = document.getElementById('smart').checked;\">\n"
-          "\t\t<h1>GoTally<sub><small>WiFi</small></sub> configuration</h1>\n"
+          "\t<body onload=\"document.getElementById('srcid').disabled = document.getElementById('smart').checked;\">\n"
+          "\t<script>"
+          "//document.getElementById('smart').addEventListener('load', loadedFun);"
+          "window.addEventListener('load', loadedFun);"
+          "function loadedFun() {"
+                "document.getElementById('srcid').disabled = !document.getElementById('smart').checked;"
+            "}"
+          "\t\twindow.onload=function(){"
+          "\t\t\tdocument.getElementById('manualCfg').hidden = !document.getElementById('manual').checked;"
+          "\t\t\tdocument.getElementById('srcid').disabled = document.getElementById('smart').checked;"
+          "\t\t}"
+          "\t</script>"
+          "\t\t<h1>OneTally<sub><small>WiFi</small></sub> configuration</h1>\n"
           "\t\t<form action=\"/update\">\n"
           "\t\t<div class=\"cfg\">\n"
           "\t\t\t<h2>Network configuration</h2>\n"
-          "\t\t\t<p><label for=\"gsip\">GoStream IP</label><input type=\"text\" minlength=\"7\" maxlength=\"15\"  required pattern=\"^((\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])$\" id=\"gsip\" name=\"gsip\"></p>\n"
+          "\t\t\t<p><label for=\"gsip\">Target IP</label><input type=\"text\" minlength=\"7\" maxlength=\"15\"  required pattern=\"^((\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])$\" id=\"gsip\" name=\"gsip\"></p>\n"
           "  \t\t\t<p><label for=\"ssid\">WiFI SSID:</label><input type=\"text\" required id=\"ssid\" name=\"ssid\"></p>\n"
           "  \t\t\t<p><label for=\"wpwd\">WiFI Password:</label><input type=\"password\" required id=\"wpwd\" name=\"wpwd\"></p>\n"
           "\t\t</div>\n"
           "\t\t<div class=\"cfg\" >\n"
           "\t\t\t<h2>Tally configuration</h2>\n"
           "\t\t\t<p>\n"
-          "\t\t\t<label for=\"srcid\">Source ID (1-5)</label>\n"
-          "\t\t\t<input type=\"number\" max=\"5\" min=\"1\" required id=\"srcid\" name=\"srcid\">\n"
+          "\t\t\t<label for=\"srcid\">Source ID (1-7)</label>\n"
+          "\t\t\t<input type=\"number\" max=\"7\" min=\"1\" required id=\"srcid\" name=\"srcid\">\n"
           "\t\t\t<label for=\"smart\">Smart assign</label>\n"
           "\t\t\t<input type=\"checkbox\" id=\"smart\" checked=true name=\"smart\" onclick=\"document.getElementById('srcid').disabled = this.checked;\">\n"
-          "\t\t\t</p>\n"
-       /*   "\t\t\t<p><label for=\"manual\">Manual configuration</label>\n"
-          "\t\t\t<input type=\"checkbox\" id=\"manual\" name=\"Manual\" onclick=\"document.getElementById('manualCfg').hidden = !this.checked;\"></p>\n"
-          "\t\t\t\n"
-          "\t\t\t<div id=\"manualCfg\">\n"
-          "\t\t\t<p><label for=\"tid\">Tally IP</label>\n"
-          "\t\t\t<input type=\"text\" minlength=\"7\" maxlength=\"15\" required pattern=\"^(?>(\\d|[1-9]\\d{2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(?1)$\" id=\"tip\" name=\"tip\"></p>\n"
-          "  \t\t\t\n"
-          "\t\t<p><label for=\"tnmid\">Tally netmask:</label>\n"
-          "\t\t\t<input type=\"text\" minlength=\"7\" maxlength=\"15\" required pattern=\"^(?>(\\d|[1-9]\\d{2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(?1)$\" id=\"tnip\" name=\"tnip\" value=\"255.255.255.0\"></p>\n"
-          "\t\t\t</div>\n"
-          "\t\t</div>\n" */
+          "\t\t\t</p>\n" 
           "\t\t<input type=\"submit\" value=\"Submit\">\n"
           "\t\t</form>\n"
           "\t</body>\n"
           "</html>\n"
-          "");
+          ""); 
 
         bool init(WiFiServer& c) {
             server_ = &c;
@@ -92,6 +96,7 @@ namespace tally {
                         std::string token;
                         std::istringstream tokenStream(std::string(tmp.c_str()));
                         bool hasUpdates = false;
+                        bool wantsSmartMode = false;
                         while (std::getline(tokenStream, token, '&')){
                             
                             int splitter = token.find('=');
@@ -101,14 +106,14 @@ namespace tally {
                             }
                             auto setting = token.substr(0, splitter);
                             auto value = token.substr(splitter + 1);
-                            if(setting == "srcid") tally::settings::update("/srcId", atoi(value.c_str()));
-                            else if(setting == "gsip") tally::settings::update("/gostream/address", value);
-                            else if(setting == "ssid") tally::settings::update("/tally/wifi/ssid", value);
-                            else if(setting == "wpwd") tally::settings::update("/tally/wifi/pwd", value);
-                            else if(setting == "smart") tally::settings::update("/smartMode", value == "on" ? true : false);
-                            else if(setting == "manual") tally::settings::update("/tally/wifi/useDHCP", value == "on" ? true : false);
-                            else if(setting == "tip") tally::settings::update("/tally/wifi/address", value);
-                            else if(setting == "tnip") tally::settings::update("/tally/wifi/netmask", value);
+                            if(setting == "srcid") tally::settings::update("/tally/srcId", atoi(value.c_str()) - 1);
+                            else if(setting == "gsip") tally::settings::update("/target/gostream/address", value);
+                            else if(setting == "ssid") tally::settings::update("/network/wifi/ssid", value);
+                            else if(setting == "wpwd") tally::settings::update("/network/wifi/pwd", value);
+                            else if(setting == "smart") wantsSmartMode = true;
+                            else if(setting == "manual") tally::settings::update("/network/wifi/useDHCP", value == "on" ? true : false);
+                            else if(setting == "tip") tally::settings::update("/network/wifi/address", value);
+                            else if(setting == "tnip") tally::settings::update("/network/wifi/netmask", value);
                             else {
                                 Serial.printf("Error: unknown setting %s\n", setting.c_str());
                                 continue;
@@ -116,8 +121,9 @@ namespace tally {
                             hasUpdates = true;
                         }
                         if(hasUpdates) {
+                            tally::settings::update("/tally/smartMode", wantsSmartMode);
                             tally::settings::commit();
-                            ESP.restart();
+                            restart();
                         }
                     }
                 }

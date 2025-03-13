@@ -1,3 +1,6 @@
+#ifndef _TARGET_HPP_
+#define _TARGET_HPP_
+
 #include "Client.h"
 #include <vector>
 
@@ -11,7 +14,7 @@ namespace target {
         virtual bool disconnect();
         virtual std::vector<uint8_t> onPgm();
         virtual std::vector<uint8_t> onPvw();
-        virtual bool receiveAndHandleMessages();
+        virtual bool receive();
 
         protected:
         Client* client_ = nullptr;
@@ -20,3 +23,5 @@ namespace target {
 
     };
 }
+
+#endif
