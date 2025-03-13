@@ -87,8 +87,7 @@ void connect() {
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(IPAddress(192, 168, 172, 1), IPAddress(192, 168, 172, 1), IPAddress(255, 255, 255, 0));
     if(WiFi.softAP("OneTally")) {
-      tally::serial::Print("OneTally AP is ready. WebUi can be found at ");
-      tally::serial::Println(WiFi.localIP().toString().c_str());
+      tally::serial::Println("OneTally AP is ready. WebUi can be found at 192.168.172.1");
     }
     server.begin();
     tally::webui::init(server);

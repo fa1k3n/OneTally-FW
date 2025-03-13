@@ -32,6 +32,8 @@ namespace target {
             sendMessage_("pipSource");
             sendMessage_("upStreamKeyType");
             sendMessage_("transitionSource");
+            //sendMessage_("pgmTally");
+            //sendMessage_("pvwTally");
         }
         return client_->connected();
     }
@@ -141,13 +143,20 @@ namespace target {
     void GoStream::handleMessage_(JsonDocument& doc) {
         String command = String((doc)["id"].as<const char *>());
         JsonArray value =  (doc)["value"].as<JsonArray>();
-
         if(command == String("pvwIndex")) {
         state_.pvwId = value[0];
         DEBUG_PRINT(state.pvwId);
         } else if(command == String("pgmIndex")) {
         state_.pgmId = value[0];
         DEBUG_PRINT(state.pgmId);
+        } else if(command == String("pgmTally")) {
+        //state_.pvwId = value[0];
+        Serial.println("PGM TALLY");
+        serializeJsonPretty(value, Serial);
+        } else if(command == String("pvwTally")) {
+        //state_.pgmId = value[0];
+        Serial.println("PVW TALLY");
+        serializeJsonPretty(value, Serial);
         } else if(command == String("autoTransition")) {
         state_.transitionOngoing = value[0] == 1 ? true : false;
         DEBUG_PRINT(state.transitionOngoing);
@@ -178,9 +187,7 @@ namespace target {
         if(type == LUMA)
             state_.lumaKeySrcId = value[2];
         DEBUG_PRINT(state.transitionSource);
-        } else {
-        Serial.print("Unknown command "); Serial.print(command); Serial.print(": "); Serial.println(value[0].as<int>());
-        }
+        } 
     }
 
     bool GoStream::receive() {

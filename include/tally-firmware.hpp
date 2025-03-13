@@ -1,5 +1,5 @@
 namespace tally {
     namespace firmware {
-        static const char* version = "0.0.4";
+        static const char* version = "0.1.0";
     }
 }
