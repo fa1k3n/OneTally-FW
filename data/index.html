@@ -11,9 +11,13 @@
         
         <script type="text/javascript">
           $(document).ready(function() {
+
+            $("#content").load("network.html")
+
             $('a').click(function(e) {
-              alert("LOAD page " + $(this).attr('href') + $("#content"))
               e.preventDefault();
+              $('.sidebar1 a').removeClass('active');
+              $(this).addClass("active");
               $("#content").load($(this).attr('href'))
             });
           })
@@ -62,7 +66,7 @@
       <div class="row">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
-            <ul class="nav flex-column">
+            <ul class="nav flex-column sidebar1">
               <li class="nav-item">
                 <a class="nav-link active" href="network.html">
                   <span data-feather="globe"></span>
@@ -115,13 +119,6 @@
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
           <div id="content"></div>
           <div id="alert_placeholder" class="container" ></div>
-
-        <!--  <div class="alert alert-dismissible fade show alert-success" role="alert" id="globalAlert">
-            <div id="successText"></div>
-              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-          </div> -->
         </main>
         
     <script type="text/javascript">
