@@ -11,8 +11,8 @@
         
         <script type="text/javascript">
           $(document).ready(function() {
-
             $("#content").load("network.html")
+            
 
             $('a').click(function(e) {
               e.preventDefault();
@@ -38,12 +38,6 @@
                 processData: false,
                 dataType: "text/plain",
                 contentType: "application/json; charset=UTF-8",
-                statusCode: {
-                    200: function() {
-                      alert( "OK" );
-                    }
-                  },
-                success: function( data, textStatus, jqXHR ){ alert("SUCESS!") }
               })   
           }
 
@@ -114,8 +108,7 @@
             </ul>
           </div>
         </nav>
-     
-        
+       
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
           <div id="content"></div>
           <div id="alert_placeholder" class="container" ></div>
@@ -138,7 +131,6 @@
             $("#globalAlert").remove();
         }, 3000 );
       }
-
     </script>
 
     </body>
