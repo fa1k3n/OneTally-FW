@@ -88,6 +88,11 @@ namespace tally {
                 String wifiPwd = "";
                 if(confWifiPwd_var) wifiPwd = String(confWifiPwd_var.value().c_str());
                 return wifiPwd;
+            } else if(var == "SWITCHER_IP") {
+                auto confSwitcherIP_var = tally::settings::query<std::string>("/target/gostream/address");
+                String switcherIP = "";
+                if(confSwitcherIP_var) switcherIP = String(confSwitcherIP_var.value().c_str());
+                return switcherIP;
             } else if(var == "SRC_ID") {
                 auto srcId_var = tally::settings::query<int>("/tally/srcId");
                 int srcId = 1;
@@ -131,6 +136,14 @@ namespace tally {
                 }
                 request->send(200, "application/json");
             });
+
+        static AsyncCallbackJsonWebHandler *switcher_handler = new AsyncCallbackJsonWebHandler("/network/switcher", [](AsyncWebServerRequest *request, JsonVariant &json) {
+            tally::settings::update("/target/gostream/address", json["switcherIP"].as<String>().c_str());
+            if(json["switcherType"].as<String>() == "gostream")
+                tally::settings::update("/target/gostream/active", true);
+            request->send(200, "application/json");
+        });
+            
 
         static AsyncCallbackJsonWebHandler *triggers_handler = new AsyncCallbackJsonWebHandler("/triggers", [](AsyncWebServerRequest *request, JsonVariant &json) {
             const auto id = std::to_string(json["id"].as<int>());
@@ -243,6 +256,10 @@ namespace tally {
 
             peripherals_handler->setMethod(HTTP_POST | HTTP_PUT);
             server.addHandler(peripherals_handler);
+
+            switcher_handler->setMethod(HTTP_POST | HTTP_PUT);
+            server.addHandler(switcher_handler);
+
             server.begin();
 
             return true;
