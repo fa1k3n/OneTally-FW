@@ -1,0 +1,55 @@
+ <div id="network" class="col-md-9  pt-3 px-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 id="pageTitle" class="h2">Network</h1>
+    </div>
+    <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+        <form action="network/wifi" method="POST" name="wifiSettings" > 
+            <div class="form-group">
+                <label for="ssid">WiFi SSID:</label>
+                <input type="text" class="form-control" required id="ssid" name="ssid" value="%WIFI_SSID%" list="foundWifis">
+                <datalist id="foundWifis">
+                %FOUND_WIFI_NETWORKS%
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label for="pwd">WiFi Password:</label>
+                <input type="password" class="form-control" required id="pwd" value="%WIFI_PWD%" name="pwd">
+            </div>
+            <div class="form-group">
+                <label for="manualConfig">Manual configuration</label>
+                <input type="checkbox" id="manualConfig" name="manualConfig" %MANUAL_CFG% onclick="disableUnused()"></p>
+
+                <div id="manualCfg">
+                        <label for="wifiaddress">Tally IP</label>
+                        <input type="text" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifiaddress" name="address" value="%TALLY_IP%">
+
+                        <label for="wifinetmask">Tally netmask:</label>
+                        <input type="text" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifinetmask" name="netmask" value="%TALLY_NETMASK%">
+                </div>
+            </div>
+            <input type="submit" value="Save" class="btn btn-success"> 
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+
+    document.querySelector("form[name='wifiSettings']").addEventListener("submit",  function(event) {
+          event.preventDefault()
+          updateResource("/network/wifi",  $('form[name="wifiSettings"]').serializeArray())
+      });
+
+    window.addEventListener("load", function() {
+            disableUnused()
+          });
+
+    $(document).ready(function(){
+        disableUnused()
+    });
+          
+    function disableUnused() {
+        const manualConfig = document.getElementById('manualConfig').checked
+        document.getElementById('manualCfg').hidden = !manualConfig
+        document.getElementById('wifiaddress').disabled = !manualConfig
+        document.getElementById('wifinetmask').disabled = !manualConfig
+    }
+</script>

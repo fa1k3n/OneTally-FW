@@ -5,8 +5,7 @@
 
 namespace tally {
   namespace webui {   
-    bool init(WiFiServer& c);
-    void checkAndServeConnection();
+    bool init();
   }
 }
 #endif

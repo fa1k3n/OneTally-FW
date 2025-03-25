@@ -11,12 +11,14 @@ namespace tally {
         bool reset();
         bool hasChanges();
 
-        template<typename T> std::optional<T> query(const char* path);
+        template<typename T> std::optional<T> query(std::string path);
 
-        bool update(const char* path, std::string value);
-        bool update(const char* path, const char* value);
-        bool update(const char* path, int value);
-        bool update(const char* path, bool value);
+        // Remake to JsonVariant to be able to handle vector
+        bool update(std::string path, std::string value);
+        //bool update(std::string path, std::vector<int> value);
+        bool update(std::string path, const char* value);
+        bool update(std::string path, int value);
+        bool update(std::string path, bool value);
 
         const __FlashStringHelper* lastError();
     }

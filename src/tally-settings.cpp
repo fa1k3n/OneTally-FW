@@ -37,30 +37,75 @@ namespace tally {
             settingsBank["target"]["obs"]["address"] = "";
             settingsBank["target"]["obs"]["port"] = 80;
             settingsBank["target"]["obs"]["active"] = false;
-            settingsBank["tally"]["srcId"] = 0;
-            settingsBank["tally"]["smartMode"] = true;
+            
+            settingsBank["triggers"][0]["id"] = 0;
+            settingsBank["triggers"][0]["peripheral"] = 0;
+            settingsBank["triggers"][0]["event"] = "onPvw";
+            settingsBank["triggers"][0]["srcId"] = "Smart";
+            settingsBank["triggers"][0]["assignedSrcId"] = 0;
+            settingsBank["triggers"][0]["colour"] = "00FF00";
+            settingsBank["triggers"][0]["brightness"] = 50;
+
+            settingsBank["triggers"][1]["id"] = 1;
+            settingsBank["triggers"][1]["peripheral"] = 0;
+            settingsBank["triggers"][1]["event"] = "onPgm";
+            settingsBank["triggers"][1]["srcId"] = "Smart";
+            settingsBank["triggers"][1]["assignedSrcId"] = 0;
+            settingsBank["triggers"][1]["colour"] = "FF0000";
+            settingsBank["triggers"][1]["brightness"] = 50;
+
+            settingsBank["triggers"][2]["id"] = 2;
+            settingsBank["triggers"][2]["peripheral"] = 0;
+            settingsBank["triggers"][2]["event"] = "searching";
+            settingsBank["triggers"][2]["srcId"] = "-";
+            settingsBank["triggers"][2]["assignedSrcId"] = 0;
+            settingsBank["triggers"][2]["colour"] = "0000FF";
+            settingsBank["triggers"][2]["brightness"] = 50;
+
+            settingsBank["triggers"][3]["id"] = 3;
+            settingsBank["triggers"][3]["peripheral"] = 0;
+            settingsBank["triggers"][3]["event"] = "connecting";
+            settingsBank["triggers"][3]["srcId"] = "-";
+            settingsBank["triggers"][3]["assignedSrcId"] = 0;
+            settingsBank["triggers"][3]["colour"] = "0000FF";
+            settingsBank["triggers"][3]["brightness"] = 50;
+
+            settingsBank["triggers"][4]["id"] = 4;
+            settingsBank["triggers"][4]["peripheral"] = 0;
+            settingsBank["triggers"][4]["event"] = "configuration";
+            settingsBank["triggers"][4]["srcId"] = "-";
+            settingsBank["triggers"][4]["assignedSrcId"] = 0;
+            settingsBank["triggers"][4]["colour"] = "FFFF00";
+            settingsBank["triggers"][4]["brightness"] = 50;
+
             settingsBank["network"]["wifi"]["ssid"] = "";
             settingsBank["network"]["wifi"]["pwd"] = "";
             settingsBank["network"]["wifi"]["useDHCP"] = true;
             settingsBank["network"]["wifi"]["address"] = "";
             settingsBank["network"]["wifi"]["gateway"] = "";
             settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";
-            settingsBank["board"]["led"]["0"]["enable"] = true;
-            settingsBank["board"]["led"]["0"]["ctrlPin"] = 18;
-            settingsBank["board"]["led"]["0"]["pwrPin"] = 19;
-            settingsBank["board"]["led"]["0"]["count"] = 1;
-            settingsBank["board"]["led"]["0"]["invert"] = false;
-            settingsBank["board"]["led"]["0"]["brightness"] = 10;
-            settingsBank["board"]["led"]["1"]["enable"] = true;
-            settingsBank["board"]["led"]["1"]["ctrlPin"] = 14;
-            settingsBank["board"]["led"]["1"]["pwrPin"] = 12;
-            settingsBank["board"]["led"]["1"]["count"] = 1;
-            settingsBank["board"]["led"]["1"]["invert"] = false;
-            settingsBank["board"]["led"]["1"]["brightness"] = 10;
+
+            settingsBank["peripherals"][0]["id"] = 0;
+            settingsBank["peripherals"][0]["name"] = "LED_0";
+            settingsBank["peripherals"][0]["type"] = "WS2811";
+            settingsBank["peripherals"][0]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"][0]["pwrPin"] = 19;
+            settingsBank["peripherals"][0]["ctrlPin"] = 18;
+            settingsBank["peripherals"][0]["count"] = 1;
+
+            settingsBank["peripherals"][1]["id"] = 1;
+            settingsBank["peripherals"][1]["name"] = "LED_1";
+            settingsBank["peripherals"][1]["type"] = "WS2811";
+            settingsBank["peripherals"][1]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"][1]["pwrPin"] = 12;
+            settingsBank["peripherals"][1]["ctrlPin"] = 14;
+            settingsBank["peripherals"][1]["count"] = 1;
+
             settingsBank["board"]["firmware"]["version"] = tally::firmware::version;
             settingsBank["state"]["status"] = "disconnected";
             settingsBank["state"]["dhcpAddress"] = "";
-            settingsBank["state"]["tally"] = (int)0;
+            settingsBank["state"]["pgm"] = (int)0;
+            settingsBank["state"]["pvw"] = (int)0;
             
             commit();
             settingsMutex.unlock();
@@ -108,14 +153,19 @@ namespace tally {
             settingsMutex.lock();
             JsonVariant tmp = settingsBank;
             while (t != nullptr) {           
-                JsonVariant foundObject = tmp[t];
+                JsonVariant foundObject;
+                if(tmp.is<JsonArray>()) {
+                    foundObject = tmp.as<JsonArray>()[std::stoi(t)].as<JsonVariant>();
+                } else {
+                    foundObject = tmp[t];
+                }
                 if (foundObject.isNull()) {
                     free(copy);
                     errStr_ = F("path not found");
                     settingsMutex.unlock();
                     return false;
                 }
-                tmp = tmp[t];
+                tmp = foundObject;
                 t = strtok(nullptr, "/");
             }
             free(copy);
@@ -124,33 +174,39 @@ namespace tally {
             return true;
         }
 
-        bool update(const char* path, std::string value) {
+        bool update(std::string path, std::string value) {
             if(settingsBank.isNull()) {
                 Serial.println("Settings not loaded");
                 errStr_ = F("Error: Settings not available");
                 return false;
             }
 
-            if(strchr(path, '/') == nullptr) {
+            if(strchr(path.c_str(), '/') == nullptr) {
                 errStr_ = F("Error: Malformed parameter address");
                 return false;
             }
 
             // Split nodes
-            char* copy = strdup(path);
+            char* copy = strdup(path.c_str());
             char *t = strtok(copy, "/");
             settingsMutex.lock();
             JsonVariant tmp = settingsBank;
             while (t != nullptr) {
-                JsonVariant foundObject = tmp[t];
+                JsonVariant foundObject;
+                if(tmp.is<JsonArray>()) {
+                    foundObject = tmp.as<JsonArray>()[std::stoi(t)].as<JsonVariant>();
+                } else {
+                    foundObject = tmp[t];
+                }
                 if (foundObject.isNull()) {
                     free(copy);
                     errStr_ = F("path not found");
                     settingsMutex.unlock();
                     return false;
                 }
-                tmp = tmp[t];
+                tmp = foundObject; 
                 t = strtok(nullptr, "/");
+                
                 if(t == nullptr) {
                     if(value.compare("true") == 0) {
                         foundObject.set(true);
@@ -176,27 +232,27 @@ namespace tally {
         }
 
         template<>
-        std::optional<JsonVariant> query(const char* path) {
+        std::optional<JsonVariant> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             return std::make_optional<JsonVariant>(var);
         }
 
         template<>
-        std::optional<std::string> query(const char* path) {
+        std::optional<std::string> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             return std::make_optional<std::string>(var.as<std::string>());
         }
 
         template<>
-        std::optional<uint16_t> query(const char* path) {
+        std::optional<uint16_t> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             int val = atoi(var.as<std::string>().c_str());
@@ -204,9 +260,9 @@ namespace tally {
         }
 
         template<>
-        std::optional<int> query(const char* path) {
+        std::optional<int> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             int val = atoi(var.as<std::string>().c_str());
@@ -214,15 +270,24 @@ namespace tally {
         }
 
         template<>
-        std::optional<uint8_t> query(const char* path) {
+        std::optional<uint8_t> query(std::string path) {
             uint16_t val = query<uint16_t>(path).value();
             return std::make_optional<uint8_t>((uint8_t)val);
         }
 
         template<>
-        std::optional<IPAddress> query(const char* path) {
+        std::optional<JsonArray> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
+                return std::nullopt;
+            }
+            return std::make_optional<JsonArray>(var.as<JsonArray>());
+        }
+
+        template<>
+        std::optional<IPAddress> query(std::string path) {
+            JsonVariant var;
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             IPAddress address;
@@ -231,9 +296,9 @@ namespace tally {
         }
 
         template<>
-        std::optional<bool> query(const char* path) {
+        std::optional<bool> query(std::string path) {
             JsonVariant var;
-            if(!query_(path, var)) {
+            if(!query_(path.c_str(), var)) {
                 return std::nullopt;
             }
             bool ret = false;
@@ -242,15 +307,15 @@ namespace tally {
             return  std::make_optional<bool>(ret); 
         }
 
-        bool update(const char* path, const char* value) {
+        bool update(std::string path, const char* value) {
             return update(path, std::string(value));        
         }
 
-        bool update(const char* path, int value) {
+        bool update(std::string path, int value) {
             return update(path, std::to_string(value));        
         }
 
-        bool update(const char* path, bool value) {
+        bool update(std::string path, bool value) {
             return update(path, value == true ? "true" : "false");        
         }
     }

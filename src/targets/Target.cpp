@@ -35,10 +35,14 @@ namespace target {
     bool Target::connect(Client* client, int numTries) {
         if(client_ == nullptr) client_ = client;
         if(client_->connected()) return true; 
+        if(address_.toString() == "") return false;
         uint8_t i = 0;
-        while(!client_->connect(address_, port_) && i++ <= numTries) {}
-        if(client_->connected()) {
-            pingInfo = { this, address_};
+        while(!client_->connect(address_, port_) && i++ <= numTries) {
+            Serial.println("Connecting");
+
+        }
+        /*if(client_->connected()) {
+           pingInfo = { this, address_};
             xTaskCreate(
                 pingWorker,    // Function that should be called
                 "pinger",  // Name of the task (for debugging)
@@ -47,7 +51,7 @@ namespace target {
                 1,               // Task priority
                 NULL             // Task handle
             );
-        }
+        } */
         return client_->connected(); 
     }
 

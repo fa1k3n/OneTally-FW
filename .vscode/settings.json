@@ -54,6 +54,9 @@
         "ratio": "cpp",
         "mutex": "cpp",
         "thread": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "bitset": "cpp",
+        "regex": "cpp",
+        "list": "cpp"
     }
 }
