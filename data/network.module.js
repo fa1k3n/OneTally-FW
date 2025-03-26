@@ -17,4 +17,10 @@ angular.module('network').
             $scope.data = response.data
         });
        
+    
+    $scope.commit = function() {
+        $http.post("/commit").then(function(response) {
+                showSuccessMessage("Saved network settings succesfully")
+            })
+    }
     })
