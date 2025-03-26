@@ -11,6 +11,9 @@ angular.
           .when("/triggers", {
             template: '<triggers-list></triggers-list>', 
           })
+          .when("/peripherals", {
+            template: '<peripherals-list></peripherals-list>', 
+          })
           .when("/mesh", {
             templateUrl : "mesh.html",
             controller: "meshCtrl"

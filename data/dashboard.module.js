@@ -5,5 +5,7 @@ angular.module('dashboardApp', [
   'ngRoute',
   'ui.bootstrap',
   'triggersList',
-  'triggerDetails'
+  'triggerDetails',
+  'peripheralsList',
+  'peripheralDetails'
 ]);

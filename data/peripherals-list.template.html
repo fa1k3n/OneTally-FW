@@ -1,0 +1,36 @@
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 id="pageTitle" class="h1">Peripherals</h1>
+</div>
+
+<div id="peripherals" class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 ">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                    <tr>
+                    <th>#</th>
+                    <th>name</th>
+                    <th>type</th>
+                    <th>RGB order</th> 
+                    <th>pwrPin #</th>
+                    <th>ctrlPin #</th>
+                    <th>count</th>
+                    <th></th>
+                    </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="peripheral in data" class='clickable-row' style='cursor:pointer'>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.id }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.name }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.type }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.rgbOrder }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.pwrPin }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.ctrlPin }}</td>
+                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.count }}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <button type="submit" id="commit_peripheral_button" class="btn btn-success" ng-onclick="commitPif()">Save</button>
+</div>

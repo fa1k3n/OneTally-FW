@@ -15,15 +15,17 @@
         <script src="dashboard.config.js"></script>
         <script src="triggers-list.module.js"></script>
         <script src="trigger-details.module.js"></script>
+        <script src="peripherals-list.module.js"></script>
+        <script src="peripheral-details.module.js"></script>
 
         <script type="text/javascript">
        
-         // $('a').click(function(e) {
+         $('a').click(function(e) {
               //e.preventDefault();
-           //   $('.sidebar1 a').removeClass('active');öåp 
-          //    $(this).addClass("active");
+              $('.sidebar1 a').removeClass('active');
+              $(this).addClass("active");
               //$("#content").load($(this).attr('href'))
-         // })
+          })
 
       
 
@@ -112,10 +114,8 @@
       
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
           <div class="modal-demo">
-<div class="modal-parent">
-    </div>
-</div>
-
+            <div class="modal-parent"></div>
+          </div>
           <div ng-view class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 "></div>
           <div id="alert_placeholder" class="container" ></div>
         </main>

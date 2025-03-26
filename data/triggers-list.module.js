@@ -13,11 +13,11 @@ angular.module('triggersList').
    
 angular.module('triggersList').
   controller('triggersListCtrl', 
-    function($scope, $rootScope, $http, $uibModal, $document) {
+    function($scope, $http, $uibModal, $document) {
         var $ctrl = this
 
         $scope.data = []
-          /*  {
+         /* {
                 "id": 0,
                 "event": "onPvw",
                 "srcId": "Smart",
@@ -35,7 +35,7 @@ angular.module('triggersList').
             }] */
 
         $scope.peripherals = []
-      /*      {
+        /* {
                 "id": 0,
                 "name": "Operator",
                 "type": "WS2811",

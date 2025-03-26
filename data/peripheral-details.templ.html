@@ -1,0 +1,56 @@
+
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title"><b>Edit peripheral {{ data.id }} </b></h3>
+</div>
+<div class="modal-body" id="modal-body">
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6"> 
+                <label class="col-md-4 control-label"  for="name">Name</label>
+                <input type="text" class="form-control" required id="name" name="name" ng-model="data.name">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <label class="control-label"  for="type">Type</label>
+                <select class="form-control" name="type" id="type" ng-model="data.type" ng-onchange="toggleBasedOnSelection()">
+                    <option value="LED">LED</option>
+                    <option value="WS2811">WS2811</option>
+                </select>
+            </div>
+            <div class="col-md-4"> 
+            <label class="control-label" for="rgbOrder">Byte order</label>
+                <select class="form-control" name="rgbOrder" ng-model="data.rgbOrder" id="rgbOrder">
+                    <option value="RGB">RGB</option>
+                    <option value="RBG">RBG</option>
+                    <option value="GRB">GRB</option>
+                    <option value="BGR">GBR</option>
+                    <option value="BRG">BRG</option>
+                    <option value="BGR">BGR</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="control-label" for="pwrPin">Power pin</label>
+                <input type="text" class="form-control" name="pwrPin" id="pwrPin" ng-model="data.pwrPin" maxlength="2" size="2">
+            </div>
+            <div class="col-md-3">
+                <label class="control-label" for="ctrlPin">Control pin</label>
+                <input type="text" class="form-control" name="ctrlPin" id="ctrlPin" ng-model="data.ctrlPin" maxlength="2" size="2">
+            </div>
+            <div class="col-md-3">
+                <label class="control-label" for="count">LED count</label>
+                <input type="text" class="form-control" name="count" id="count" ng-model="data.count" maxlength="2" size="2">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-primary" type="button" ng-click="$ctrl.ok()">OK</button>
+    <button class="btn btn-warning" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+</div>
