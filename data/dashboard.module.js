@@ -7,5 +7,6 @@ angular.module('dashboardApp', [
   'triggersList',
   'triggerDetails',
   'peripheralsList',
-  'peripheralDetails'
+  'peripheralDetails',
+  'network'
 ]);

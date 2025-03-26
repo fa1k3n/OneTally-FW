@@ -6,7 +6,10 @@ angular.
     function config($routeProvider) {
        $routeProvider
           .when("/", {
-            templateUrl : "admin.html"
+            templateUrl : "<network></network>"
+          })
+          .when("/network", {
+            template: '<network></network>', 
           })
           .when("/triggers", {
             template: '<triggers-list></triggers-list>', 
