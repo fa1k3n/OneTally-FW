@@ -187,13 +187,25 @@ namespace tally {
                 }
             }
 
-            server.serveStatic("/bootstrap.min.css", SPIFFS, "/bootstrap.min.css");
+            server.serveStatic("/", SPIFFS, "/");
+            //server.serveStatic("/*.css", SPIFFS, "/*.css");
+            //server.serveStatic("/trigger-details.template.html", SPIFFS, "/trigger-details.template.html");
+            //server.serveStatic("/triggers-list.template.html", SPIFFS, "/triggers-list.template.html");
+            /*server.serveStatic("/bootstrap.min.css", SPIFFS, "/bootstrap.min.css");
             server.serveStatic("/webui.css", SPIFFS, "/webui.css");
             server.serveStatic("/bootstrap.bundle.js", SPIFFS, "/bootstrap.bundle.js");
+            server.serveStatic("/ui-bootstrap.min.js", SPIFFS, "/ui-bootstrap.min.js");
             server.serveStatic("/angular.min.js", SPIFFS, "/angular.min.js");
+            server.serveStatic("/angular-route.js", SPIFFS, "/angular-route.js");
             server.serveStatic("/feather.min.js", SPIFFS, "/feather.min.js");
             server.serveStatic("/jquery.min.js", SPIFFS, "/jquery.min.js");
             server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+            server.serveStatic("/trigger-details.module.js", SPIFFS, "/trigger-details.module.js");
+            server.serveStatic("/trigger-details.template.html", SPIFFS, "/trigger-details.template.html");
+            server.serveStatic("/triggers-list.module.js", SPIFFS, "/triggers-list.module.js");
+            server.serveStatic("/triggers-list.template.html", SPIFFS, "/triggers-list.template.html");
+            server.serveStatic("/dashboard.config.js", SPIFFS, "/dashboard.config.js");
+            server.serveStatic("/dashboard.module.js", SPIFFS, "/dashboard.module.js");*/
 
             server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
                 request->redirect("/index.html");

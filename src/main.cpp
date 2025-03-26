@@ -54,8 +54,8 @@ bool setUpWiFi(int maxTries) {
     // STRANGE CODE HERE 
     const auto tallyAddress = tally::settings::query<IPAddress>("/network/wifi/address").value();  
   }
-  WiFi.mode(WIFI_STA);
-  //WiFi.disconnect();
+  WiFi.mode(WIFI_AP);
+  WiFi.disconnect();
   WiFi.begin(ssid.value().c_str(), pwd.value().c_str());
 
   tally::serial::Print(F("\nConnecting to WiFi AP."));
@@ -82,8 +82,8 @@ void connect() {
   if(WiFi.status() != WL_CONNECTED) {
     // Setup AP
     tally::settings::update("/state/status", "configuration");
-   // WiFi.mode(WIFI_OFF);
-   // WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
+    WiFi.disconnect();
     WiFi.mode(WIFI_STA);
     WiFi.softAPConfig(IPAddress(192, 168, 172, 1), IPAddress(192, 168, 172, 1), IPAddress(255, 255, 255, 0));
     //WiFi.setSleep()

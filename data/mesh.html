@@ -1,48 +1,8 @@
+Mesh: Nothing here yet
 
-<script src="angular.min.js"></script>
+<div ng-controller="meshCtrl">
 
-<div ng-app="myApp" ng-controller="myCtrl">
+    <h1 ng-repeat="item in items">{{ item }}</h1>
 
-<h1 ng-repeat="x in data">{{x.id}}</h1>
-<table id="tally-list" class="table w-auto  ">
-                <thead>
-                        <tr>
-                        <th>#</th>
-                        <th>event</th>
-                        <th>srcId</th>
-                        <th>peripheral</th>
-                        <th>colour</th>
-                        <th>brightness</th>
-                        <th></th>
-                        </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="event in data" class='clickable-row' style='cursor:pointer'>
-                        <td>data {{event.id}}</td>
-                    </tr>
-                </tbody>
-</table>
-<script>
-var app = angular.module("myApp", []);
-app.controller("myCtrl", function($scope) {
-  $scope.data = [
-    {
-        "id": 0,
-        "event": "onPvw",
-        "srcId": "Smart",
-        "peripheral": 0,
-        "colour": "#00FF00",
-        "brightness": 60
-    }, 
-    {
-        "id": 0,
-        "event": "onPvw",
-        "srcId": "Smart",
-        "peripheral": 0,
-        "colour": "#00FF00",
-        "brightness": 60
-    }]
-});
-</script>
-
+    
 </div>

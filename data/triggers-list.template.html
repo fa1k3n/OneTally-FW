@@ -1,0 +1,35 @@
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 id="pageTitle" class="h1">Triggers</h1>
+</div>
+
+<div id="peripherals" class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 ">
+    <div class="table-responsive">
+        <table id="tally-list" class="table ">
+            <thead>
+                    <tr>
+                    <th>#</th>
+                    <th>event</th>
+                    <th>srcId</th>
+                    <th>peripheral</th>
+                    <th>colour</th>
+                    <th>brightness</th>
+                    <th></th>
+                    </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="trigger in data" class='clickable-row' style='cursor:pointer'>
+                    <!--<td ng-click="editTrigger(trigger.id)">{{ trigger.id }}</td>-->
+                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.id }}</td>
+                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.event }}</td>
+                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.srcId }}</td>
+                    <td ng-click="open('.modal-parent', trigger.id)">{{ peripherals[trigger.peripheral].name }}</td>
+                    <td ng-click="open('.modal-parent', trigger.id)"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></td>
+                    <td><input type="range" ng-model="trigger.brightness" ng-change="brightnessChange(trigger.id)" min="0" max="100" name="brightness"></td>
+                    <td><!--<span data-feather="trash-2"></span>--></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <button type="submit" id="commit_tally_button" class="btn btn-success" ng-onclick="commit()">Save</button>
+</div>
