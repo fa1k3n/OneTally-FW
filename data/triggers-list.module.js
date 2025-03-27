@@ -82,7 +82,6 @@ angular.module('triggersList').
         $scope.commit = function() {
             $http.post("/commit").then(function(response) {
                 showSuccessMessage("Triggers saved successfully")
-                //$('#commit_pif_button').prop('disabled', true);
             })
         }
 

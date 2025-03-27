@@ -35,7 +35,6 @@ angular.module('peripheralsList').
         $scope.commit = function() {
             $http.post("/commit").then(function(response) {
                 showSuccessMessage("Peripherals saved successfully")
-                //$('#commit_pif_button').prop('disabled', true);
             })
         }
 

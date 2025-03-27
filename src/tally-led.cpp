@@ -68,8 +68,8 @@ namespace tally {
 
             for(auto trigger : triggers) {
                 if(trigger["event"] == status.value() || 
-                ((trigger["event"] == "onPgm") && pgm == trigger["srcId"].as<int>()) ||
-                ((trigger["event"] == "onPvw") && pvw == trigger["srcId"].as<int>())) {
+                ((trigger["event"] == "onPgm") && (pgm.value() + 1) == trigger["srcId"].as<int>()) ||
+                ((trigger["event"] == "onPvw") && (pvw.value() + 1) == trigger["srcId"].as<int>())) {
                     auto pifIndex = trigger["peripheral"].as<int>();
                     auto led = leds[pifIndex];
                     auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);

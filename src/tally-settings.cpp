@@ -31,17 +31,16 @@ namespace tally {
             preferences.clear();
             settingsBank.clear();
             settingsBank["debug"] = false;
-            settingsBank["target"]["gostream"]["address"] = "";
-            settingsBank["target"]["gostream"]["port"] = 19010;
-            settingsBank["target"]["gostream"]["active"] = true;
-            settingsBank["target"]["obs"]["address"] = "";
-            settingsBank["target"]["obs"]["port"] = 80;
-            settingsBank["target"]["obs"]["active"] = false;
-            
+
+            settingsBank["targets"][0]["type"] = "gostream";
+            settingsBank["targets"][0]["name"] = "GoStream";
+            // settingsBank["targets"][1]["type"] = "obs";
+            // settingsBank["targets"][1]["name"] = "OBS";
+
             settingsBank["triggers"][0]["id"] = 0;
             settingsBank["triggers"][0]["peripheral"] = 0;
             settingsBank["triggers"][0]["event"] = "onPvw";
-            settingsBank["triggers"][0]["srcId"] = "Smart";
+            settingsBank["triggers"][0]["srcId"] = 1;
             settingsBank["triggers"][0]["assignedSrcId"] = 0;
             settingsBank["triggers"][0]["colour"] = "00FF00";
             settingsBank["triggers"][0]["brightness"] = 50;
@@ -49,7 +48,7 @@ namespace tally {
             settingsBank["triggers"][1]["id"] = 1;
             settingsBank["triggers"][1]["peripheral"] = 0;
             settingsBank["triggers"][1]["event"] = "onPgm";
-            settingsBank["triggers"][1]["srcId"] = "Smart";
+            settingsBank["triggers"][1]["srcId"] = 1;
             settingsBank["triggers"][1]["assignedSrcId"] = 0;
             settingsBank["triggers"][1]["colour"] = "FF0000";
             settingsBank["triggers"][1]["brightness"] = 50;
@@ -78,9 +77,10 @@ namespace tally {
             settingsBank["triggers"][4]["colour"] = "FFFF00";
             settingsBank["triggers"][4]["brightness"] = 50;
 
+            settingsBank["network"]["targetAddress"] = "";
             settingsBank["network"]["wifi"]["ssid"] = "";
             settingsBank["network"]["wifi"]["pwd"] = "";
-            settingsBank["network"]["wifi"]["useDHCP"] = true;
+            settingsBank["network"]["wifi"]["manualCfg"] = false;
             settingsBank["network"]["wifi"]["address"] = "";
             settingsBank["network"]["wifi"]["gateway"] = "";
             settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";

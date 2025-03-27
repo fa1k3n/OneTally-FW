@@ -123,27 +123,17 @@ namespace tally {
             return String();
         }
 
-        static AsyncCallbackJsonWebHandler *wifi_handler = new AsyncCallbackJsonWebHandler("/network/wifi", [](AsyncWebServerRequest *request, JsonVariant &json) {
-                tally::settings::update("/network/wifi/ssid", json["ssid"].as<String>().c_str());
-                tally::settings::update("/network/wifi/pwd", json["pwd"].as<String>().c_str());
-                
-                if(json["manualConfig"].is<String>()) {
-                    tally::settings::update("/network/wifi/useDHCP", false);   
-                    tally::settings::update("/network/wifi/address", json["address"].as<String>().c_str());
-                    tally::settings::update("/network/wifi/netmask", json["netmask"].as<String>().c_str());
-                } else {
-                    tally::settings::update("/network/wifi/useDHCP", true);
-                }
+        static AsyncCallbackJsonWebHandler *wifi_handler = new AsyncCallbackJsonWebHandler("/network", [](AsyncWebServerRequest *request, JsonVariant &json) {
+                serializeJsonPretty(json, Serial);
+                tally::settings::update("/network/wifi/ssid", json["wifi"]["ssid"].as<String>().c_str());
+                tally::settings::update("/network/wifi/pwd", json["wifi"]["pwd"].as<String>().c_str());
+                tally::settings::update("/network/targetAddress", json["targetAddress"].as<String>().c_str());
+                tally::settings::update("/network/wifi/manualCfg", json["wifi"]["manualCfg"].as<bool>());   
+                tally::settings::update("/network/wifi/address", json["wifi"]["address"].as<String>().c_str());
+                tally::settings::update("/network/wifi/netmask", json["wifi"]["netmask"].as<String>().c_str());
+            
                 request->send(200, "application/json");
             });
-
-        static AsyncCallbackJsonWebHandler *switcher_handler = new AsyncCallbackJsonWebHandler("/network/switcher", [](AsyncWebServerRequest *request, JsonVariant &json) {
-            tally::settings::update("/target/gostream/address", json["switcherIP"].as<String>().c_str());
-            if(json["switcherType"].as<String>() == "gostream")
-                tally::settings::update("/target/gostream/active", true);
-            request->send(200, "application/json");
-        });
-            
 
         static AsyncCallbackJsonWebHandler *triggers_handler = new AsyncCallbackJsonWebHandler("/triggers", [](AsyncWebServerRequest *request, JsonVariant &json) {
             const auto id = std::to_string(json["id"].as<int>());
@@ -208,7 +198,7 @@ namespace tally {
             server.serveStatic("/dashboard.module.js", SPIFFS, "/dashboard.module.js");*/
 
             server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-                request->redirect("/index.html");
+                request->redirect("/index.html#!network");
             });
             server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request){
                 request->send(SPIFFS, "/index.html", "text/html", false, processor);
@@ -235,6 +225,13 @@ namespace tally {
             });
    
             server.on("/peripherals", HTTP_GET, [](AsyncWebServerRequest *request){               
+                JsonVariantConst value = tally::settings::query<JsonVariant>(request->url().c_str()).value();
+                String sendValue; 
+                serializeJson(value, sendValue);
+                request->send(200, "application/json", sendValue);
+            });
+
+            server.on("/network", HTTP_GET, [](AsyncWebServerRequest *request){               
                 JsonVariantConst value = tally::settings::query<JsonVariant>(request->url().c_str()).value();
                 String sendValue; 
                 serializeJson(value, sendValue);
@@ -268,9 +265,6 @@ namespace tally {
 
             peripherals_handler->setMethod(HTTP_POST | HTTP_PUT);
             server.addHandler(peripherals_handler);
-
-            switcher_handler->setMethod(HTTP_POST | HTTP_PUT);
-            server.addHandler(switcher_handler);
 
             server.begin();
 

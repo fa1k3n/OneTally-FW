@@ -39,9 +39,9 @@ void updateTally() {
 bool setUpWiFi(int maxTries) {
   auto ssid = tally::settings::query<std::string>("/network/wifi/ssid");
   auto pwd = tally::settings::query<std::string>("/network/wifi/pwd");
-  auto useDHCP =  tally::settings::query<bool>("/network/wifi/useDHCP");
+  auto manualCfg =  tally::settings::query<bool>("/network/wifi/manualCfg");
 
-  if(!ssid || !pwd ||!useDHCP) return false;
+  if(!ssid || !pwd || !manualCfg) return false;
 
   if(ssid.value().length() < 5) {
     tally::serial::Println(F("Warning: SSID not set, entering configuration mode"));
@@ -50,8 +50,7 @@ bool setUpWiFi(int maxTries) {
   }
 
   tally::settings::update("/state/status", "searching");
-  if(!useDHCP.value()) {
-    // STRANGE CODE HERE 
+  if(manualCfg.value()) {
     const auto tallyAddress = tally::settings::query<IPAddress>("/network/wifi/address").value();  
   }
   WiFi.mode(WIFI_AP);
@@ -67,7 +66,7 @@ bool setUpWiFi(int maxTries) {
   if(WiFi.status() == WL_CONNECTED) {
     tally::serial::Println(F("OK"));
     tally::settings::update("/state/status", "connecting");
-    if(useDHCP)
+    if(!manualCfg.value())
       tally::settings::update("/state/dhcpAddress", WiFi.localIP().toString().c_str());
   } else {
     tally::serial::Println(F("ERROR"));
@@ -94,8 +93,7 @@ void connect() {
     }
    
   } else {
-    switcher = (target::Target*) new target::GoStream(tally::settings::query<IPAddress>("/target/gostream/address").value());
-
+    switcher = (target::Target*) new target::GoStream(tally::settings::query<IPAddress>("/network/targetAddress").value());
     /*bool obsActive = tally::settings::query<bool>("/target/obs/active").value();
     bool gostreamActive = tally::settings::query<bool>("/target/gostream/active").value();
     if(gostreamActive)

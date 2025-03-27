@@ -38,8 +38,6 @@ namespace target {
         if(address_.toString() == "") return false;
         uint8_t i = 0;
         while(!client_->connect(address_, port_) && i++ <= numTries) {
-            Serial.println("Connecting");
-
         }
         /*if(client_->connected()) {
            pingInfo = { this, address_};

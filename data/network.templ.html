@@ -4,68 +4,40 @@
     </div>
     <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
         <h2 class="h2">Switcher settings</h2>
-        <form action="network/switcher" method="POST" name="switcherSettings" >
+        <div class="form-group">
+            <label for="switcherType" class="control-label">Switcher type</label>
+            <select name="switcherType" class="form-control" id="switcherType">
+                <option ng-repeat="switcher in switchers" value="switcher.type">{{ switcher.name }}</option>
+            </select>
+        </div>
             <div class="form-group">
-                <label for="switcherType" class="control-label">Switcher type</label>
-                <select name="switcherType" class="form-control" id="switcherType">
-                    <option value="gostream">GoStream</option>
-                    <option value="obs">OBS</option>
-                </select>
-            </div>
-             <div class="form-group">
-                <label for="switcherIP" class="control-label">Switcher IP</label>
-                <input type="text" class="form-control" required id="switcherIP" name="switcherIP">
-            </div>
-        </form>
+            <label for="switcherIP" class="control-label">Switcher IP</label>
+            <input type="text" class="form-control" required id="switcherIP" name="switcherIP" ng-model="data.targetAddress">
+        </div>
         <h2 class="h2">WiFi settings</h2>
-        <form action="network/wifi" method="POST" name="wifiSettings" > 
-            <div class="form-group">
-                <label for="ssid" class="control-label">WiFi SSID:</label>
-                <input type="text" class="form-control" required id="ssid" name="ssid" ng-model="data.ssid" list="foundWifis">
-                <datalist id="foundWifis">
-                %FOUND_WIFI_NETWORKS%
-                </datalist>
-            </div>
-            <div class="form-group">
-                <label for="pwd" class="control-label">WiFi Password:</label>
-                <input type="password" class="form-control" required id="pwd" ng-model="data.pwd" name="pwd">
-            </div>
-            <div class="form-group">
-                <label for="manualConfig" class="control-label">Manual configuration</label>
-                <input type="checkbox" id="manualConfig" name="manualConfig" ng-model="data.useDHCP" ng-click="disableUnused()"></p>
+        <div class="form-group">
+            <label for="ssid" class="control-label">WiFi SSID:</label>
+            <input type="text" class="form-control" required id="ssid" name="ssid" ng-model="data.wifi.ssid" list="foundWifis">
+            <datalist id="foundWifis">
+            %FOUND_WIFI_NETWORKS%
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label for="pwd" class="control-label">WiFi Password:</label>
+            <input type="password" class="form-control" required id="pwd" ng-model="data.wifi.pwd" name="pwd">
+        </div>
+        <div class="form-group">
+            <label for="manualConfig" class="control-label">Manual configuration</label>
+            <input type="checkbox" id="manualConfig" name="manualConfig" ng-model="data.wifi.manualCfg"></p>
 
-                <div id="manualCfg">
-                        <label for="wifiaddress" class="control-label">Tally IP</label>
-                        <input type="text" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifiaddress" name="address" ng-model="data.address">
+            <div id="manualCfg" ng-hide="!data.wifi.manualCfg">
+                    <label for="wifiaddress" class="control-label">Tally IP</label>
+                    <input type="text" class="form-control" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifiaddress" name="address" ng-model="data.wifi.address">
 
-                        <label for="wifinetmask" class="control-label">Tally netmask:</label>
-                        <input type="text" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifinetmask" name="netmask" ng-model="data.netmask">
-                </div>
+                    <label for="wifinetmask" class="control-label">Tally netmask:</label>
+                    <input type="text" class="form-control" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifinetmask" name="netmask" ng-model="data.wifi.netmask">
             </div>
-            <input type="submit" value="Save" class="btn btn-success" ng-click="commit()"> 
-        </form>
+        </div>
+        <input type="submit" value="Save" class="btn btn-success" ng-click="commit()"> 
     </div>
 </div>
-<script type="text/javascript">
-
-    document.querySelector("form[name='wifiSettings']").addEventListener("submit",  function(event) {
-          event.preventDefault()
-          updateResource("/network/wifi",  $('form[name="wifiSettings"]').serializeArray())
-          updateResource("/network/switcher",  $('form[name="switcherSettings"]').serializeArray())
-      });
-
-    window.addEventListener("load", function() {
-            disableUnused()
-          });
-
-    $(document).ready(function(){
-        disableUnused()
-    });
-          
-    function disableUnused() {
-        const manualConfig = document.getElementById('manualConfig').checked
-        document.getElementById('manualCfg').hidden = !manualConfig
-        document.getElementById('wifiaddress').disabled = !manualConfig
-        document.getElementById('wifinetmask').disabled = !manualConfig
-    }
-</script>
