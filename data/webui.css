@@ -106,3 +106,15 @@ body {
 .modal {
 display: block;
 }
+
+.create-resource{
+  width: 32px;
+  height: 32px;
+  color:#198754;
+}
+
+.delete-resource{
+  width: 24px;
+  height: 24px;
+  color:#DC3545
+}
