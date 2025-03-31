@@ -15,9 +15,8 @@ angular.module('peripheralsList').
   controller('peripheralsListCtrl', 
     function($scope, $http, $uibModal, $document) {
         var $ctrl = this
-
-        $scope.data = []
-          /*  {
+        $scope.data = [
+            {
                 "id": 0,
                 "name": "LED_0",
                 "type": "WS2811",
@@ -25,7 +24,7 @@ angular.module('peripheralsList').
                 "pwrPin": 19,
                 "ctrlPin": 18,
                 "count": 1
-            }] */
+            }] 
 
         $http.get("/peripherals")
             .then(function(response) {                
@@ -38,6 +37,13 @@ angular.module('peripheralsList').
             })
         }
 
+        $scope.new = function() {
+          alert("NEW PERIPHERAL")
+        }
+
+        $scope.delete_pif = function(id) {
+          alert("DELETE PERIPHERAL " + id)
+        }
         
       $scope.open = function(parentSelector, id) {
         var parentElem = parentSelector ? 
