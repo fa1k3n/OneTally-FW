@@ -37,7 +37,7 @@ angular.module('peripheralDetails').
         $scope.data = Object.assign({}, data)
     
         $ctrl.ok = function () {
-            $http.post("/peripherals/" + $scope.data["id"], $scope.data).then(function(response) {
+            $http.put("/peripherals/" + $scope.data["id"], $scope.data).then(function(response) {
                 showSuccessMessage("Peripheral updated successfully")
             })
             $uibModalInstance.close($scope.data["id"]);

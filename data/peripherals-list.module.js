@@ -33,7 +33,7 @@ angular.module('peripheralsList').
             });
             
         $scope.commit = function() {
-            $http.post("/commit").then(function(response) {
+            $http.put("/commit").then(function(response) {
                 showSuccessMessage("Peripherals saved successfully")
             })
         }

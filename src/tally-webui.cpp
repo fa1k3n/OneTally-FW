@@ -146,8 +146,13 @@ namespace tally {
         });
 
         static AsyncCallbackJsonWebHandler *peripherals_handler = new AsyncCallbackJsonWebHandler("/peripherals", [](AsyncWebServerRequest *request, JsonVariant &json) {
-            // Target IP, smart assign & sourceId
-            const auto id = std::to_string(json["id"].as<int>());
+            std::string id;
+            if(request->method() == WebRequestMethod::HTTP_PUT) {
+                id = std::to_string(json["id"].as<int>());
+            } else if (request->method() == WebRequestMethod::HTTP_POST) {
+                id = "";
+            }
+           
             tally::settings::update("/peripherals/" + id + "/name", json["name"].as<std::string>());
             tally::settings::update("/peripherals/" + id + "/type", json["type"].as<std::string>());
             tally::settings::update("/peripherals/" + id + "/rgbOrder", json["rgbOrder"].as<std::string>());
