@@ -23,7 +23,7 @@
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.id }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.event }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.srcId }}</td>
-                    <td ng-click="open('.modal-parent', trigger.id)">{{ peripherals[trigger.peripheral].name }}</td>
+                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.peripheral }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></td>
                     <td><input type="range" ng-model="trigger.brightness" ng-change="brightnessChange(trigger.id)" min="0" max="100" name="brightness"></td>
                     <td><!--<span data-feather="trash-2"></span>--></td>

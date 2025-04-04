@@ -14,18 +14,18 @@
                     <th>pwrPin #</th>
                     <th>ctrlPin #</th>
                     <th>count</th>
-                    <th ng-click="new()" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
+                    <th ng-click="new('.modal-parent')" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
                     </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="peripheral in data" class='clickable-row' style='cursor:pointer'>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.name }}</td>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.type }}</td>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.rgbOrder }}</td>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.pwrPin }}</td>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.ctrlPin }}</td>
-                    <td ng-click="open('.modal-parent', peripheral.id)">{{ peripheral.count }}</td>
-                    <td ng-click="delete_pif(peripheral.id)"><span class="delete-resource" data-feather="trash-2" ></span></td>
+                <tr ng-repeat="(name, peripheral) in data" class='clickable-row' style='cursor:pointer'>
+                    <td ng-click="open('.modal-parent', name)">{{ name }}</td>
+                    <td ng-click="open('.modal-parent', name)">{{ peripheral.type }}</td>
+                    <td ng-click="open('.modal-parent', name)">{{ peripheral.rgbOrder }}</td>
+                    <td ng-click="open('.modal-parent', name)">{{ peripheral.pwrPin }}</td>
+                    <td ng-click="open('.modal-parent', name)">{{ peripheral.ctrlPin }}</td>
+                    <td ng-click="open('.modal-parent', name)">{{ peripheral.count }}</td>
+                    <td ng-click="delete_pif(name)"><span class="delete-resource" data-feather="trash-2" ></span></td>
                 </tr>
             </tbody>
         </table>

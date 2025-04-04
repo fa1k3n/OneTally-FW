@@ -14,10 +14,13 @@ namespace tally {
         constexpr int NOF_PIXELS = 2;
         
         std::vector<Adafruit_NeoPixel*> leds;
+
+        JsonDocument pifAllocationMap;
  
         void init() {
-            auto peripherals = tally::settings::query<JsonArray>("/peripherals").value();            
-            for(auto pif : peripherals) {
+            auto peripherals = tally::settings::query<JsonVariant>("/peripherals").value();    
+            for(auto keyValPair : peripherals.as<JsonObject>()) {
+                auto pif = keyValPair.value();
                 pinMode(pif["pwrPin"].as<int>(), OUTPUT);
                 if(pif["type"].as<String>() == "WS2811") {
                     String orderStr = pif["rgbOrder"];
@@ -35,6 +38,7 @@ namespace tally {
                     } else if (orderStr == "BGR") {
                         order = NEO_BGR;
                     }
+                    pifAllocationMap[keyValPair.key()] = leds.size();
                     leds.push_back(new Adafruit_NeoPixel(pif["count"].as<int>(), pif["ctrlPin"].as<int>(), order + NEO_KHZ800));
                     digitalWrite(pif["pwrPin"].as<int>(), HIGH);
                 }
@@ -59,7 +63,7 @@ namespace tally {
             auto pgm = tally::settings::query<int>("/state/pgm");
             if(!status) return;
             JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
-            JsonArray pifs = tally::settings::query<JsonArray>("/peripherals").value();
+            JsonVariant pifs = tally::settings::query<JsonVariant>("/peripherals").value();
 
             std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { 
                 led->clear(); 
@@ -70,8 +74,8 @@ namespace tally {
                 if(trigger["event"] == status.value() || 
                 ((trigger["event"] == "onPgm") && (pgm.value() + 1) == trigger["srcId"].as<int>()) ||
                 ((trigger["event"] == "onPvw") && (pvw.value() + 1) == trigger["srcId"].as<int>())) {
-                    auto pifIndex = trigger["peripheral"].as<int>();
-                    auto led = leds[pifIndex];
+                    auto pifName = trigger["peripheral"].as<String>();
+                    auto led = leds[pifAllocationMap[pifName]];
                     auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
                     auto brightness = trigger["brightness"].as<int>();
                     led->setBrightness(brightness * 255 / 100);

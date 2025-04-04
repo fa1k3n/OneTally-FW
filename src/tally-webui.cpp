@@ -146,24 +146,34 @@ namespace tally {
         });
 
         static AsyncCallbackJsonWebHandler *peripherals_handler = new AsyncCallbackJsonWebHandler("/peripherals", [](AsyncWebServerRequest *request, JsonVariant &json) {
-            std::string id;
-            if(request->method() == WebRequestMethod::HTTP_PUT) {
-                id = std::to_string(json["id"].as<int>());
-            } else if (request->method() == WebRequestMethod::HTTP_POST) {
-                id = "";
+            std::string resource = std::string(request->url().c_str());
+            serializeJsonPretty(json, Serial);
+            if (request->method() == HTTP_PUT) {
+                tally::settings::update( resource + "/type", json["type"].as<std::string>());
+                tally::settings::update( resource + "/rgbOrder", json["rgbOrder"].as<std::string>());
+                tally::settings::update( resource + "/pwrPin", json["pwrPin"].as<int>());
+                tally::settings::update( resource + "/ctrlPin", json["ctrlPin"].as<int>());
+                tally::settings::update( resource + "/count", json["count"].as<int>());
+            } else if (request->method() == HTTP_POST) {
+                Serial.printf("Creating resource %s\n", request->url().c_str());
+                JsonDocument doc;
+                doc["type"] = json["type"].as<std::string>();
+                doc["rgbOrder"] = json["rgbOrder"].as<std::string>();
+                doc["pwrPin"] = json["pwrPin"].as<int>();
+                doc["ctrlPin"] = json["ctrlPin"].as<int>();
+                doc["count"] = json["count"].as<int>();
+                tally::settings::create(request->url(), doc);
+            } 
+            
+            auto value = tally::settings::query<JsonVariant>(resource);
+            if(value) {
+                String sendValue; 
+                serializeJson(value.value(), sendValue);
+                request->send(200, "application/json", sendValue);
+            } else {
+                request->send(400, "application/json");
             }
-           
-            tally::settings::update("/peripherals/" + id + "/name", json["name"].as<std::string>());
-            tally::settings::update("/peripherals/" + id + "/type", json["type"].as<std::string>());
-            tally::settings::update("/peripherals/" + id + "/rgbOrder", json["rgbOrder"].as<std::string>());
-            tally::settings::update("/peripherals/" + id + "/pwrPin", json["pwrPin"].as<int>());
-            tally::settings::update("/peripherals/" + id + "/ctrlPin", json["ctrlPin"].as<int>());
-            tally::settings::update("/peripherals/" + id + "/count", json["count"].as<int>());
-
-            JsonVariantConst value = tally::settings::query<JsonVariant>("/peripherals/" + id).value();
-            String sendValue; 
-            serializeJson(value, sendValue);
-            request->send(200, "application/json", sendValue);
+            
         });
 
         bool init() {
@@ -236,6 +246,11 @@ namespace tally {
                 request->send(200, "application/json", sendValue);
             });
 
+            server.on("/peripherals", HTTP_DELETE, [](AsyncWebServerRequest *request){        
+                tally::settings::remove(request->url());
+                request->send(200, "application/json");
+            });
+
             server.on("/network", HTTP_GET, [](AsyncWebServerRequest *request){               
                 JsonVariantConst value = tally::settings::query<JsonVariant>(request->url().c_str()).value();
                 String sendValue; 
@@ -250,7 +265,7 @@ namespace tally {
                 request->send(200, "application/json", sendValue);
             });
 
-            server.on("/commit", HTTP_POST, [](AsyncWebServerRequest *request){               
+            server.on("/commit", HTTP_PUT, [](AsyncWebServerRequest *request){               
                 if (tally::settings::commit())
                     request->send(200, "application/json");
                 else 

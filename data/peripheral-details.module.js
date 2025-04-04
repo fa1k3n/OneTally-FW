@@ -32,15 +32,16 @@ angular.module('peripheralDetails').
     })
 
 angular.module('peripheralDetails').
-    controller('peripheralDetailsCtrl', function($scope, $http, $uibModalInstance, data) {
+    controller('peripheralDetailsCtrl', function($scope, $http, $uibModalInstance, name, data) {
         var $ctrl = this
         $scope.data = Object.assign({}, data)
+        $scope.name = name
     
         $ctrl.ok = function () {
-            $http.put("/peripherals/" + $scope.data["id"], $scope.data).then(function(response) {
-                showSuccessMessage("Peripheral updated successfully")
-            })
-            $uibModalInstance.close($scope.data["id"]);
+            //$http.put("/peripherals/" + name, $scope.data).then(function(response) {
+            //    showSuccessMessage("Peripheral updated successfully")
+            //})
+            $uibModalInstance.close({"name": $scope.name, "data": $scope.data });
         };
 
         $ctrl.cancel = function () {

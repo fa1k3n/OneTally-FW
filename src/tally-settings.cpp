@@ -38,7 +38,7 @@ namespace tally {
             // settingsBank["targets"][1]["name"] = "OBS";
 
             settingsBank["triggers"][0]["id"] = 0;
-            settingsBank["triggers"][0]["peripheral"] = 0;
+            settingsBank["triggers"][0]["peripheral"] = "LED_0";
             settingsBank["triggers"][0]["event"] = "onPvw";
             settingsBank["triggers"][0]["srcId"] = 1;
             settingsBank["triggers"][0]["assignedSrcId"] = 0;
@@ -46,7 +46,7 @@ namespace tally {
             settingsBank["triggers"][0]["brightness"] = 50;
 
             settingsBank["triggers"][1]["id"] = 1;
-            settingsBank["triggers"][1]["peripheral"] = 0;
+            settingsBank["triggers"][1]["peripheral"] = "LED_0";
             settingsBank["triggers"][1]["event"] = "onPgm";
             settingsBank["triggers"][1]["srcId"] = 1;
             settingsBank["triggers"][1]["assignedSrcId"] = 0;
@@ -54,7 +54,7 @@ namespace tally {
             settingsBank["triggers"][1]["brightness"] = 50;
 
             settingsBank["triggers"][2]["id"] = 2;
-            settingsBank["triggers"][2]["peripheral"] = 0;
+            settingsBank["triggers"][2]["peripheral"] = "LED_0";
             settingsBank["triggers"][2]["event"] = "searching";
             settingsBank["triggers"][2]["srcId"] = "-";
             settingsBank["triggers"][2]["assignedSrcId"] = 0;
@@ -62,7 +62,7 @@ namespace tally {
             settingsBank["triggers"][2]["brightness"] = 50;
 
             settingsBank["triggers"][3]["id"] = 3;
-            settingsBank["triggers"][3]["peripheral"] = 0;
+            settingsBank["triggers"][3]["peripheral"] = "LED_0";
             settingsBank["triggers"][3]["event"] = "connecting";
             settingsBank["triggers"][3]["srcId"] = "-";
             settingsBank["triggers"][3]["assignedSrcId"] = 0;
@@ -70,7 +70,7 @@ namespace tally {
             settingsBank["triggers"][3]["brightness"] = 50;
 
             settingsBank["triggers"][4]["id"] = 4;
-            settingsBank["triggers"][4]["peripheral"] = 0;
+            settingsBank["triggers"][4]["peripheral"] = "LED_0";
             settingsBank["triggers"][4]["event"] = "configuration";
             settingsBank["triggers"][4]["srcId"] = "-";
             settingsBank["triggers"][4]["assignedSrcId"] = 0;
@@ -85,21 +85,17 @@ namespace tally {
             settingsBank["network"]["wifi"]["gateway"] = "";
             settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";
 
-            settingsBank["peripherals"][0]["id"] = 0;
-            settingsBank["peripherals"][0]["name"] = "LED_0";
-            settingsBank["peripherals"][0]["type"] = "WS2811";
-            settingsBank["peripherals"][0]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"][0]["pwrPin"] = 19;
-            settingsBank["peripherals"][0]["ctrlPin"] = 18;
-            settingsBank["peripherals"][0]["count"] = 1;
+            settingsBank["peripherals"]["LED_0"]["type"] = "WS2811";
+            settingsBank["peripherals"]["LED_0"]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"]["LED_0"]["pwrPin"] = 19;
+            settingsBank["peripherals"]["LED_0"]["ctrlPin"] = 18;
+            settingsBank["peripherals"]["LED_0"]["count"] = 1;
 
-            settingsBank["peripherals"][1]["id"] = 1;
-            settingsBank["peripherals"][1]["name"] = "LED_1";
-            settingsBank["peripherals"][1]["type"] = "WS2811";
-            settingsBank["peripherals"][1]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"][1]["pwrPin"] = 12;
-            settingsBank["peripherals"][1]["ctrlPin"] = 14;
-            settingsBank["peripherals"][1]["count"] = 1;
+            settingsBank["peripherals"]["LED_1"]["type"] = "WS2811";
+            settingsBank["peripherals"]["LED_1"]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"]["LED_1"]["pwrPin"] = 12;
+            settingsBank["peripherals"]["LED_1"]["ctrlPin"] = 14;
+            settingsBank["peripherals"]["LED_1"]["count"] = 1;
 
             settingsBank["board"]["firmware"]["version"] = tally::firmware::version;
             settingsBank["state"]["status"] = "disconnected";
@@ -171,6 +167,67 @@ namespace tally {
             free(copy);
             settingsMutex.unlock();
             var = tmp;
+            return true;
+        }
+
+        std::optional<JsonVariant> _find(const char* path) {
+             if(settingsBank.isNull()) {
+                Serial.printf("Settings not available %s\n", path);
+                errStr_ = F("Error: Settings not available");
+                return std::nullopt;
+            }
+
+            if(strchr(path, '/') == nullptr) {
+                errStr_ = F("Error: Malformed parameter address");
+                return std::nullopt;
+            }
+
+            // Split nodes
+            char* copy = strdup(path);
+            char *t = strtok(copy, "/");
+            settingsMutex.lock();
+            JsonVariant tmp = settingsBank;
+            while (t != nullptr) {           
+                JsonVariant foundObject;
+                if(tmp.is<JsonArray>()) {
+                    foundObject = tmp.as<JsonArray>()[std::stoi(t)].as<JsonVariant>();
+                } else {
+                    foundObject = tmp[t];
+                }
+                if (foundObject.isNull()) {
+                    free(copy);
+                    errStr_ = F("path not found");
+                    settingsMutex.unlock();
+                    return std::nullopt;
+                }
+                tmp = foundObject;
+                t = strtok(nullptr, "/");
+            }
+            free(copy);
+            settingsMutex.unlock();
+            return tmp;
+        }
+
+        bool create(String path, JsonVariant value) {
+            String p = path.substring(0, path.lastIndexOf('/'));
+            String resource = path.substring(path.lastIndexOf('/') + 1);
+            Serial.printf("Create node path %s , node %s \n", p.c_str(), resource.c_str());
+            auto item = _find(p.c_str()).value();
+            settingsMutex.lock();
+            item[resource] = value;
+            settingsMutex.unlock();
+            return true;
+        }
+
+        bool remove(String path) {
+            String p = path.substring(0, path.lastIndexOf('/'));
+            String resource = path.substring(path.lastIndexOf('/') + 1);
+            auto item = _find(p.c_str()).value();
+            Serial.printf("Item to remove %s %s\n", p.c_str(), resource.c_str());
+            settingsMutex.lock();
+            item.remove(resource);
+            //settingsBank.remove(item[resource]);
+            settingsMutex.unlock();
             return true;
         }
 
