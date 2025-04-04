@@ -11,6 +11,9 @@ namespace tally {
         bool reset();
         bool hasChanges();
 
+        bool create(String path, JsonVariant value = JsonObject());
+        bool remove(String path);
+
         template<typename T> std::optional<T> query(std::string path);
 
         // Remake to JsonVariant to be able to handle vector

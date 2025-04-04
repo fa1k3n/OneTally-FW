@@ -1,5 +1,5 @@
 #include <SerialCommands.h>
-
+#include <string>
 
 namespace tally {
   namespace serial {
