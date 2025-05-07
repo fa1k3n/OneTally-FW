@@ -79,12 +79,25 @@ namespace tally {
                     auto led = leds[pifAllocationMap[pifName]];
                     auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
                     auto brightness = trigger["brightness"].as<int>();
-                    led->setBrightness(brightness * 255 / 100);
-                    for(uint16_t i = 0; i < led->numPixels(); i ++)
-                        led->setPixelColor(i, colour);
-                    led->show();
-                    
-                }
+
+                     bool hasChanges = false;
+                    uint8_t calcBrightness = brightness * 255 / 100;
+                    if(led->getBrightness() != calcBrightness) {
+                        led->setBrightness(calcBrightness);
+                        hasChanges = true;
+                    }
+
+                    for(uint16_t i = 0; i < led->numPixels(); i ++) {   
+                        if(led->getPixelColor(i) != colour) {
+                            led->setPixelColor(i, colour);
+                            hasChanges = true;
+                        }
+                    }
+
+                     if(hasChanges)
+                            led->show();
+
+                } 
             }
         }
 
