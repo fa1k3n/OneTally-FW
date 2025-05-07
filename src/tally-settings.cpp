@@ -83,7 +83,7 @@ namespace tally {
             settingsBank["network"]["wifi"]["pwd"] = "";
             settingsBank["network"]["wifi"]["manualCfg"] = false;
             settingsBank["network"]["wifi"]["address"] = "";
-            settingsBank["network"]["wifi"]["gateway"] = "";
+            settingsBank["network"]["wifi"]["gateway"] = "192.168.255.1";
             settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";
 
             settingsBank["peripherals"]["LED_0"]["type"] = "WS2811";

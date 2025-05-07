@@ -18,6 +18,7 @@ namespace tally {
         JsonDocument pifAllocationMap;
  
         void init() {
+            leds.clear();
             auto peripherals = tally::settings::query<JsonVariant>("/peripherals").value();    
             for(auto keyValPair : peripherals.as<JsonObject>()) {
                 auto pif = keyValPair.value();

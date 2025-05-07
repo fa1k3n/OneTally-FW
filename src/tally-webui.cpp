@@ -9,6 +9,7 @@
 
 #include "tally-webui.hpp"
 #include "tally-settings.hpp"
+#include "tally-led.hpp"
 
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
@@ -21,105 +22,14 @@ namespace tally {
         AsyncWebServer server(80);
         std::vector<String> availableWifiNetworks;
 
-        String peripheralProcessor(const String& var) {
-            std::stringstream pifStr;
-            if(var == "PERIPHERALS") {
-                JsonArray peripherals = tally::settings::query<JsonArray>("/peripherals").value();
-                for(auto pif : peripherals) {
-                    int id = pif["id"];
-                    pifStr << "<tr class='clickable-row' onclick='showPeripheral(" << id << ")' style='cursor:pointer'>" << std::endl;
-                    pifStr << "<td>" << id << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_name\">" << pif["name"].as<std::string>() << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_type\">" << pif["type"].as<std::string>() << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_rgbOrder\">" << pif["rgbOrder"].as<std::string>() << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_pwrPin\">" << pif["pwrPin"] << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_ctrlPin\">" << pif["ctrlPin"] << "</td>" << std::endl;
-                    pifStr << "<td id=\"" << id << "_count\">" << pif["count"] << "</td>" << std::endl;
-                    pifStr << "<td><span data-feather='trash-2'></span></td>" << std::endl;
-                    pifStr << "</tr>" << std::endl;
-                }
-                return String(pifStr.str().c_str());
-            }
-            return String();
-        }
-
-        String triggersProcessor(const String& var) {
-            std::stringstream eventStr;
-            if(var == "TRIGGERS") {
-                JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
-                for(auto trigger : triggers) {
-                    int id = trigger["id"];
-                    eventStr << "<tr class='clickable-row' style='cursor:pointer'>" << std::endl;
-                    eventStr << "<td onclick='showTrigger(" << id << ")' id='" << id << "_id'>" << id << "</td>" << std::endl;
-                    eventStr << "<td onclick='showTrigger(" << id << ")' id='" << id << "_event'>" << trigger["event"].as<std::string>() << "</td>" << std::endl;
-                    eventStr << "<td onclick='showTrigger(" << id << ")' id='" << id << "_srcId'>" << trigger["srcId"].as<std::string>() << "</td>" << std::endl;
-
-                  /*  JsonVariant peripheral = tally::settings::query<JsonVariant>("/peripheral/" + std::to_string(event["peripheralId"].as<int>())).value();
-                    eventStr << "<td onclick='showTally(" << id << ")' id='" << id << "_peripheral'>" << peripheral["name"] << "</td>" << std::endl;      
-                    eventStr << "<td onclick='showTally(" << id << ")' id='" << id << "_colour'>" << event["colour"].as<std::string>() << "</td>" << std::endl;
-                    eventStr << "<td><input type='range' id='" << id << "_brightness' value='" << event["colour"].as<int>() << "'min='0' max='100' name='brightness'></td>" << std::endl;
-                    eventStr << "<td><span data-feather='trash-2'></span></td>" << std::endl;
-                    eventStr << "</tr>" << std::endl;*/
-                }
-                return String(eventStr.str().c_str());
-            }
-            return String();
-        }
-
         String processor(const String& var) {
-           if(var == "TARGET_IP"){
-                auto targetIP_var = tally::settings::query<IPAddress>("/target/gostream/address");
-                String targetIP = "";
-                if(targetIP_var) targetIP = targetIP_var.value().toString();
-                return targetIP;
-            } else if(var == "WIFI_SSID") {
-                auto confWifiSSID_var = tally::settings::query<std::string>("/network/wifi/ssid");
-                String wifiSSID = "";
-                if(confWifiSSID_var) wifiSSID = String(confWifiSSID_var.value().c_str());
-                return wifiSSID;
-            } else if(var == "FOUND_WIFI_NETWORKS") {
+            if(var == "FOUND_WIFI_NETWORKS") {
                 String wifiStr = "";
                 for (auto & element : availableWifiNetworks) {
                     wifiStr += "<option>" + element + "</option>";
                 }
                 return wifiStr;
-            } else if(var == "WIFI_PWD") {
-                auto confWifiPwd_var = tally::settings::query<std::string>("/network/wifi/pwd");
-                String wifiPwd = "";
-                if(confWifiPwd_var) wifiPwd = String(confWifiPwd_var.value().c_str());
-                return wifiPwd;
-            } else if(var == "SWITCHER_IP") {
-                auto confSwitcherIP_var = tally::settings::query<std::string>("/target/gostream/address");
-                String switcherIP = "";
-                if(confSwitcherIP_var) switcherIP = String(confSwitcherIP_var.value().c_str());
-                return switcherIP;
-            } else if(var == "SRC_ID") {
-                auto srcId_var = tally::settings::query<int>("/tally/srcId");
-                int srcId = 1;
-                if(srcId_var) srcId = srcId_var.value() + 1;
-                return String(srcId);
-            } else if(var == "SMART_MODE") {
-                auto smartMode_var = tally::settings::query<bool>("/tally/smartMode");
-                bool smartMode = true;
-                if(smartMode_var) smartMode = smartMode_var.value();
-                return smartMode ? "checked" : "";
-            }else if(var == "MANUAL_CFG") {
-                auto useDHCP_var = tally::settings::query<bool>("/network/wifi/useDHCP");
-                bool manualConfig = false;
-                if(useDHCP_var) manualConfig = !useDHCP_var.value();
-                return manualConfig ? "checked" : "";
-            } else if(var == "TALLY_IP") {
-                auto tallyIP_var = tally::settings::query<IPAddress>("/network/wifi/address");
-                String tallyIP = "";
-                if(tallyIP_var) tallyIP = tallyIP_var.value().toString();
-                return tallyIP;
-            } else if(var == "TALLY_NETMASK") {
-                auto tallyNetmask_var = tally::settings::query<IPAddress>("/network/wifi/netmask");
-                String tallyNetmask = "";
-                if(tallyNetmask_var) tallyNetmask = tallyNetmask_var.value().toString();
-                return tallyNetmask;
             } 
-
             return String();
         }
 
@@ -195,6 +105,7 @@ namespace tally {
                 String sendValue; 
                 serializeJson(value.value(), sendValue);
                 request->send(200, "application/json", sendValue);
+                led::init(); // Re-init the periferals
             } else {
                 request->send(400, "application/json");
             }
@@ -218,30 +129,12 @@ namespace tally {
             }
 
             server.serveStatic("/", SPIFFS, "/");
-            //server.serveStatic("/*.css", SPIFFS, "/*.css");
-            //server.serveStatic("/trigger-details.template.html", SPIFFS, "/trigger-details.template.html");
-            //server.serveStatic("/triggers-list.template.html", SPIFFS, "/triggers-list.template.html");
-            /*server.serveStatic("/bootstrap.min.css", SPIFFS, "/bootstrap.min.css");
-            server.serveStatic("/webui.css", SPIFFS, "/webui.css");
-            server.serveStatic("/bootstrap.bundle.js", SPIFFS, "/bootstrap.bundle.js");
-            server.serveStatic("/ui-bootstrap.min.js", SPIFFS, "/ui-bootstrap.min.js");
-            server.serveStatic("/angular.min.js", SPIFFS, "/angular.min.js");
-            server.serveStatic("/angular-route.js", SPIFFS, "/angular-route.js");
-            server.serveStatic("/feather.min.js", SPIFFS, "/feather.min.js");
-            server.serveStatic("/jquery.min.js", SPIFFS, "/jquery.min.js");
-            server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
-            server.serveStatic("/trigger-details.module.js", SPIFFS, "/trigger-details.module.js");
-            server.serveStatic("/trigger-details.template.html", SPIFFS, "/trigger-details.template.html");
-            server.serveStatic("/triggers-list.module.js", SPIFFS, "/triggers-list.module.js");
-            server.serveStatic("/triggers-list.template.html", SPIFFS, "/triggers-list.template.html");
-            server.serveStatic("/dashboard.config.js", SPIFFS, "/dashboard.config.js");
-            server.serveStatic("/dashboard.module.js", SPIFFS, "/dashboard.module.js");*/
 
             server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
                 request->redirect("/index.html#!network");
             });
             server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request){
-                request->send(SPIFFS, "/index.html", "text/html", false, processor);
+                request->send(SPIFFS, "/index.html", "text/html");
             });
 
             server.on("/network.html", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -253,15 +146,15 @@ namespace tally {
             });
 
             server.on("/peripherals.html", HTTP_GET, [](AsyncWebServerRequest *request){
-                request->send(SPIFFS, "/peripherals.html", "text/html", false, peripheralProcessor);
+                request->send(SPIFFS, "/peripherals.html", "text/html");
             });
 
             server.on("/mesh.html", HTTP_GET, [](AsyncWebServerRequest *request){
-                request->send(SPIFFS, "/mesh.html", "text/html", false, processor);
+                request->send(SPIFFS, "/mesh.html", "text/html");
             });
             
             server.on("/admin.html", HTTP_GET, [](AsyncWebServerRequest *request){
-                request->send(SPIFFS, "/admin.html", "text/html", false, processor);
+                request->send(SPIFFS, "/admin.html", "text/html");
             });
    
             server.on("/peripherals", HTTP_GET, [](AsyncWebServerRequest *request){               
