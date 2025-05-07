@@ -62,7 +62,6 @@ angular.module('peripheralsList').
             animation: false,
             controller: 'peripheralDetailsCtrl',
             controllerAs: '$ctrl',
-          //  scope: newScope,
             appendTo: parentElem,
             backdrop: false, 
             size: 'lg',

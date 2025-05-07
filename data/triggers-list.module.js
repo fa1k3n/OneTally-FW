@@ -16,43 +16,29 @@ angular.module('triggersList').
     function($scope, $http, $uibModal, $document) {
         var $ctrl = this
 
-        $scope.data = []
-         /* {
+        $scope.data = [
+            /*{
                 "id": 0,
+                "peripheral": "LED_0",
                 "event": "onPvw",
-                "srcId": "Smart",
-                "peripheral": 0,
-                "colour": "#00FF00",
+                "srcId": "1",
+                "colour": "00FF00",
                 "brightness": 60
             }, 
             {
                 "id": 1,
+                "peripheral": "LED_0",
                 "event": "onPgm",
-                "srcId": "Smart",
-                "peripheral": 1,
-                "colour": "#FF0000",
+                "srcId": "1",
+                "colour": "FF0000",
                 "brightness": 60
-            }] */
+            }*/
+        ]
 
-        $scope.peripherals = []
-        /* {
-                "id": 0,
-                "name": "Operator",
-                "type": "WS2811",
-                "rgbOrder": "RGB",
-                "pwrPin": 19,
-                "ctrlPin": 18,
-                "count": 1
-            }, 
-            {
-                "id": 1,
-                "name": "REC Indicator",
-                "type": "WS2811",
-                "rgbOrder": "RGB",
-                "pwrPin": 14,
-                "ctrlPin": 12,
-                "count": 1
-            }]*/
+        $scope.peripherals = [
+            //"LED_0",
+            //"LED_1",
+        ]
 
         $scope.events = [
             { "id": "searching", "text": "While searching" },
@@ -71,7 +57,7 @@ angular.module('triggersList').
             });
         $http.get("/peripherals")
             .then(function(response) {                
-                $scope.peripherals = response.data
+                $scope.peripherals = Object.keys(response.data)
             });
             
         $scope.brightnessChange = function(triggerId) {
@@ -80,11 +66,67 @@ angular.module('triggersList').
 
 
         $scope.commit = function() {
-            $http.post("/commit").then(function(response) {
-                showSuccessMessage("Triggers saved successfully")
+            $http.put("/commit").then(function(response) {
+                showSuccessMessage("saved successfully")
             })
         }
 
+        $scope.new = function(parentSelector) {
+            var parentElem = parentSelector ? 
+            angular.element($document[0].querySelector('.modal-demo ' + parentSelector)) : undefined;
+            var newScope = {
+            "data": {
+                    "id": $scope.data.length,
+                    "peripheral": $scope.peripherals[0],
+                    "event": "onPvw",
+                    "srcId": "1",
+                    "colour": "00FF00",
+                    "brightness": 60
+                }
+            }
+
+             var modalInstance = $uibModal.open({
+            templateUrl: 'trigger-details.template.html',
+            animation: false,
+            controller: 'triggerDetailsCtrl',
+            controllerAs: '$ctrl',
+            appendTo: parentElem,
+            backdrop: false, 
+            resolve: {
+                data: function() {
+                    return newScope.data;
+                },
+                peripherals: function() {
+                    return $scope.peripherals
+                },
+                events: function() {
+                    return $scope.events
+                }
+            }
+          })
+
+          modalInstance.result.then(function(data) {
+              $http.post("/triggers/" + data.id, data).then(function(response) {
+                showSuccessMessage(data.id + " created successfully")
+                $http.get("/triggers/" + data.id)
+                .then(function(response) {                
+                    $scope.data[data.id] = response.data
+                });
+              })
+          });
+        }
+
+       $scope.delete_trigger = function(id) {
+          $http.delete("/triggers/" + id).then(function(response) {
+            showSuccessMessage(id + " deleted successfully")
+            $http.get("/triggers")
+              .then(function(response) {                
+                $scope.data = response.data
+              });
+          }, function(resp) {
+            alert ("Failed to delete " + resp)
+          })
+        }
         
       $scope.open = function(parentSelector, id) {
         var parentElem = parentSelector ? 
@@ -110,14 +152,16 @@ angular.module('triggersList').
             }
         });
 
-        modalInstance.result.then(function(id) {
-              $http.get("/triggers/" + id)
+        modalInstance.result.then(function(data) {
+            $http.put("/triggers/" + data.id, data).then(function(response) {
+            showSuccessMessage(data.id + " created successfully")
+            $http.get("/triggers/" + data.id)
                 .then(function(response) {                
-                    $scope.data[id] = response.data
+                    $scope.data[data.id] = response.data
                 });
             }, function() {
-        });
+          });
+        })
     };
-    }
-  )
+})
     

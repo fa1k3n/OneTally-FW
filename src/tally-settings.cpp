@@ -2,6 +2,7 @@
 #include "tally-firmware.hpp"
 #include <Preferences.h>
 #include <mutex>
+#include <string>
 
 
 
@@ -214,7 +215,15 @@ namespace tally {
             Serial.printf("Create node path %s , node %s \n", p.c_str(), resource.c_str());
             auto item = _find(p.c_str()).value();
             settingsMutex.lock();
-            item[resource] = value;
+            try {
+                // Is it a number
+                auto index = std::stoi(resource.c_str());
+                item[index] = value;
+            } catch (std::invalid_argument const& ex) {
+                // Nope it was a string
+                 item[resource] = value;
+            }
+            
             settingsMutex.unlock();
             return true;
         }
@@ -222,10 +231,16 @@ namespace tally {
         bool remove(String path) {
             String p = path.substring(0, path.lastIndexOf('/'));
             String resource = path.substring(path.lastIndexOf('/') + 1);
-            auto item = _find(p.c_str()).value();
-            Serial.printf("Item to remove %s %s\n", p.c_str(), resource.c_str());
+             auto item = _find(p.c_str()).value();
             settingsMutex.lock();
-            item.remove(resource);
+            try {
+                // Is it a number
+                auto index = std::stoi(resource.c_str());
+                 item.remove(index);
+            } catch (std::invalid_argument const& ex) {
+                // Nope it was a string
+                 item.remove(resource);
+            }
             //settingsBank.remove(item[resource]);
             settingsMutex.unlock();
             return true;

@@ -8,9 +8,11 @@
         <div class="row">
             <div class="col-md-4"> 
                 <label class="control-label"  for="peripheral">Peripheral</label>
-                <select class="form-control" name="peripheral" id="peripheral" ng-model="data.peripheral">
-                    <option  ng-repeat="pif in peripherals" ng-value="pif.id">{{ pif.name }}</option>
+                <select  class="form-control" name="peripheral" id="peripheral" ng-model="data.peripheral" ng-options="pif for pif in peripherals">
                 </select>
+               <!-- <select class="form-control" name="peripheral" id="peripheral" ng-model="data.peripheral">
+                    <option  ng-repeat="pif in peripherals" ng-value="pif">{{ pif }}</option>
+                </select> -->
             </div>
             <div class="col-md-6">
                 <label class="control-label"  for="event">Event</label>

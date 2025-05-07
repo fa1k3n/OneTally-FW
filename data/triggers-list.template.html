@@ -1,11 +1,10 @@
-
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 id="pageTitle" class="h1">Triggers</h1>
 </div>
 
 <div id="triggers" class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 ">
     <div class="table-responsive">
-        <table id="tally-list" class="table ">
+        <table class="table ">
             <thead>
                     <tr>
                     <th>#</th>
@@ -14,22 +13,23 @@
                     <th>peripheral</th>
                     <th>colour</th>
                     <th>brightness</th>
-                    <th></th>
+                    <th ng-click="new('.modal-parent')" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
                     </tr>
             </thead>
-            <tbody>
                 <tr ng-repeat="trigger in data" class='clickable-row' style='cursor:pointer'>
-                    <!--<td ng-click="editTrigger(trigger.id)">{{ trigger.id }}</td>-->
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.id }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.event }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.srcId }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.peripheral }}</td>
                     <td ng-click="open('.modal-parent', trigger.id)"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></td>
                     <td><input type="range" ng-model="trigger.brightness" ng-change="brightnessChange(trigger.id)" min="0" max="100" name="brightness"></td>
-                    <td><!--<span data-feather="trash-2"></span>--></td>
+                    <td ng-click="delete_trigger(trigger.id)"><span class="delete-resource" data-feather="trash-2" ></span></td>
                 </tr>
             </tbody>
         </table>
     </div>
-    <button type="submit" id="commit_tally_button" class="btn btn-success" ng-click="commit()">Save</button>
+    <button type="submit" id="commit_peripheral_button" class="btn btn-success" ng-click="commit()">Save</button>
+    <script>
+                feather.replace()
+    </script>
 </div>

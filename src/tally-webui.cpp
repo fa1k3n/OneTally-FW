@@ -137,17 +137,42 @@ namespace tally {
 
         static AsyncCallbackJsonWebHandler *triggers_handler = new AsyncCallbackJsonWebHandler("/triggers", [](AsyncWebServerRequest *request, JsonVariant &json) {
             const auto id = std::to_string(json["id"].as<int>());
-            tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<int>());
-            tally::settings::update("/triggers/" + id + "/event", json["event"].as<String>().c_str());
-            tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<String>().c_str());
-            tally::settings::update("/triggers/" + id + "/colour", json["colour"].as<String>().c_str());
-            tally::settings::update("/triggers/" + id + "/brightness", json["brightness"].as<int>());
-            request->send(200, "application/json");
+            std::string resource = std::string(request->url().c_str());
+
+            if (request->method() == HTTP_PUT) {
+                tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<String>().c_str());
+                tally::settings::update("/triggers/" + id + "/event", json["event"].as<String>().c_str());
+                tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<String>().c_str());
+                tally::settings::update("/triggers/" + id + "/colour", json["colour"].as<String>().c_str());
+                tally::settings::update("/triggers/" + id + "/brightness", json["brightness"].as<int>());
+            } else if (request->method() == HTTP_POST) {
+                Serial.printf("Creating resource %s\n", resource.c_str());
+                JsonDocument doc;
+                doc["id"] = json["id"].as<std::string>();
+                doc["peripheral"] = json["peripheral"].as<std::string>();
+                doc["event"] = json["event"].as<std::string>();
+                doc["srcId"] = json["srcId"].as<std::string>();
+                doc["assignedSrcId"] = "0";
+                doc["colour"] = json["colour"].as<std::string>();
+                doc["brightness"] = json["brightness"].as<int>();
+                tally::settings::create(request->url(), doc);
+            } 
+
+            auto value = tally::settings::query<JsonVariant>(resource);
+            Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
+
+            if(value.has_value()) {
+                Serial.println("Send response");
+                String sendValue; 
+                serializeJson(value.value(), sendValue);
+                request->send(200, "application/json", sendValue);
+            } else {
+                request->send(400, "application/json");
+            }
         });
 
         static AsyncCallbackJsonWebHandler *peripherals_handler = new AsyncCallbackJsonWebHandler("/peripherals", [](AsyncWebServerRequest *request, JsonVariant &json) {
             std::string resource = std::string(request->url().c_str());
-            serializeJsonPretty(json, Serial);
             if (request->method() == HTTP_PUT) {
                 tally::settings::update( resource + "/type", json["type"].as<std::string>());
                 tally::settings::update( resource + "/rgbOrder", json["rgbOrder"].as<std::string>());
@@ -247,6 +272,12 @@ namespace tally {
             });
 
             server.on("/peripherals", HTTP_DELETE, [](AsyncWebServerRequest *request){        
+                tally::settings::remove(request->url());
+                request->send(200, "application/json");
+            });
+
+            server.on("/triggers", HTTP_DELETE, [](AsyncWebServerRequest *request){     
+                Serial.printf("Removing trigger %s\n", request->url().c_str() );   
                 tally::settings::remove(request->url());
                 request->send(200, "application/json");
             });

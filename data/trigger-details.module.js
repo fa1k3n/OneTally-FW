@@ -40,10 +40,10 @@ angular.module('triggerDetails').
         $scope.events = Object.assign({}, events)
     
         $ctrl.ok = function () {
-            $http.post("/triggers/" + $scope.data["id"], $scope.data).then(function(response) {
-                showSuccessMessage("Trigger updated successfully")
-            })
-            $uibModalInstance.close($scope.data["id"]);
+            //$http.post("/triggers/" + $scope.data["id"]).then(function(response) {
+            //    showSuccessMessage("Trigger updated successfully")
+            //})
+            $uibModalInstance.close($scope.data);
         };
 
         $ctrl.cancel = function () {
