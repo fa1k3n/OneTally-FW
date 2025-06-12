@@ -41,7 +41,7 @@ angular.module('peripheralDetails').
             //$http.put("/peripherals/" + name, $scope.data).then(function(response) {
             //    showSuccessMessage("Peripheral updated successfully")
             //})
-            $uibModalInstance.close({"name": $scope.name, "data": $scope.data });
+            $uibModalInstance.close($scope.data);
         };
 
         $ctrl.cancel = function () {

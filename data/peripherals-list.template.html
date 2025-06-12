@@ -8,6 +8,7 @@
         <table class="table">
             <thead>
                     <tr>
+                    <th>#</th>
                     <th>name</th>
                     <th>type</th>
                     <th>RGB order</th> 
@@ -18,14 +19,15 @@
                     </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="(name, peripheral) in data" class='clickable-row' style='cursor:pointer'>
-                    <td ng-click="open('.modal-parent', name)">{{ name }}</td>
-                    <td ng-click="open('.modal-parent', name)">{{ peripheral.type }}</td>
-                    <td ng-click="open('.modal-parent', name)">{{ peripheral.rgbOrder }}</td>
-                    <td ng-click="open('.modal-parent', name)">{{ peripheral.pwrPin }}</td>
-                    <td ng-click="open('.modal-parent', name)">{{ peripheral.ctrlPin }}</td>
-                    <td ng-click="open('.modal-parent', name)">{{ peripheral.count }}</td>
-                    <td ng-click="delete_pif(name)"><span class="delete-resource" data-feather="trash-2" ></span></td>
+                <tr ng-repeat="pif in data" class='clickable-row' style='cursor:pointer'>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.id }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.name }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.type }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.rgbOrder }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.pwrPin }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.ctrlPin }}</td>
+                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.count }}</td>
+                    <td ng-click="delete_pif(pif.id)"><span class="delete-resource" data-feather="trash-2" ></span></td>
                 </tr>
             </tbody>
         </table>

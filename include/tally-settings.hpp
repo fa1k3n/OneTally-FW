@@ -23,6 +23,8 @@ namespace tally {
         bool update(std::string path, int value);
         bool update(std::string path, bool value);
 
+        JsonDocument& private_getPrivateBank();
+
         const __FlashStringHelper* lastError();
     }
 }

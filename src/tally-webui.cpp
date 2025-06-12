@@ -84,14 +84,19 @@ namespace tally {
         static AsyncCallbackJsonWebHandler *peripherals_handler = new AsyncCallbackJsonWebHandler("/peripherals", [](AsyncWebServerRequest *request, JsonVariant &json) {
             std::string resource = std::string(request->url().c_str());
             if (request->method() == HTTP_PUT) {
+                tally::settings::update( resource + "/name", json["name"].as<std::string>());
                 tally::settings::update( resource + "/type", json["type"].as<std::string>());
                 tally::settings::update( resource + "/rgbOrder", json["rgbOrder"].as<std::string>());
                 tally::settings::update( resource + "/pwrPin", json["pwrPin"].as<int>());
                 tally::settings::update( resource + "/ctrlPin", json["ctrlPin"].as<int>());
                 tally::settings::update( resource + "/count", json["count"].as<int>());
             } else if (request->method() == HTTP_POST) {
-                Serial.printf("Creating resource %s\n", request->url().c_str());
                 JsonDocument doc;
+                doc["id"] = tally::settings::private_getPrivateBank()["nextPIFIndex"].as<u_int16_t>();
+                tally::settings::private_getPrivateBank()["nextPIFIndex"] = doc["id"].as<u_int16_t>() + 1;
+                resource = resource + "/" + doc["id"].as<std::string>();
+                Serial.printf("Creating resource %s\n", resource.c_str());
+                doc["name"] = json["name"].as<std::string>();
                 doc["type"] = json["type"].as<std::string>();
                 doc["rgbOrder"] = json["rgbOrder"].as<std::string>();
                 doc["pwrPin"] = json["pwrPin"].as<int>();
@@ -103,6 +108,7 @@ namespace tally {
             auto value = tally::settings::query<JsonVariant>(resource);
             if(value) {
                 String sendValue; 
+                serializeJson(value.value(), Serial);
                 serializeJson(value.value(), sendValue);
                 request->send(200, "application/json", sendValue);
                 led::init(); // Re-init the periferals

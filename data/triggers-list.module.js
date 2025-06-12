@@ -17,9 +17,9 @@ angular.module('triggersList').
         var $ctrl = this
 
         $scope.data = [
-            /*{
+   /*         {
                 "id": 0,
-                "peripheral": "LED_0",
+                "peripheral": 0,
                 "event": "onPvw",
                 "srcId": "1",
                 "colour": "00FF00",
@@ -27,17 +27,25 @@ angular.module('triggersList').
             }, 
             {
                 "id": 1,
-                "peripheral": "LED_0",
+                "peripheral": 0,
                 "event": "onPgm",
                 "srcId": "1",
                 "colour": "FF0000",
                 "brightness": 60
-            }*/
+            }
+                */
         ]
 
         $scope.peripherals = [
-            //"LED_0",
-            //"LED_1",
+    /*        {
+                "id": 0,
+                "name": "LED 0",
+            },
+            {
+                "id": 1,
+                "name": "LED 1",
+            }
+*/
         ]
 
         $scope.events = [
@@ -51,13 +59,17 @@ angular.module('triggersList').
             { "id": "rec", "text": "While recording" },
         ]    
 
+        $scope.findPifById = function(id) {
+            return $scope.peripherals.find((item) => item.id === id).name 
+        }
+
         $http.get("/triggers")
             .then(function(response) {                
                 $scope.data = response.data
             });
         $http.get("/peripherals")
             .then(function(response) {                
-                $scope.peripherals = Object.keys(response.data)
+                $scope.peripherals = response.data
             });
             
         $scope.brightnessChange = function(triggerId) {
@@ -153,6 +165,7 @@ angular.module('triggersList').
         });
 
         modalInstance.result.then(function(data) {
+            console.log("data", data)
             $http.put("/triggers/" + data.id, data).then(function(response) {
             showSuccessMessage(data.id + " created successfully")
             $http.get("/triggers/" + data.id)

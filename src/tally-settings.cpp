@@ -9,6 +9,8 @@
 namespace tally {
     namespace settings {
         JsonDocument settingsBank;
+        JsonDocument privateBank;
+
         Preferences preferences;
         const __FlashStringHelper* errStr_;
         std::mutex settingsMutex;
@@ -27,56 +29,59 @@ namespace tally {
             return hasUnsavedChanges;
         }
 
+        JsonDocument& private_getPrivateBank() {
+            return privateBank;
+        }
+
         bool reset() {
             settingsMutex.lock();
             preferences.clear();
             settingsBank.clear();
             settingsBank["debug"] = false;
 
+            privateBank["debug"] = false;
+            privateBank["nextPIFIndex"] = 3;
+            privateBank["nextTRIGIndex"] = 3;
             settingsBank["targets"][0]["type"] = "gostream";
             settingsBank["targets"][0]["name"] = "GoStream";
             // settingsBank["targets"][1]["type"] = "obs";
             // settingsBank["targets"][1]["name"] = "OBS";
 
             settingsBank["triggers"][0]["id"] = 0;
-            settingsBank["triggers"][0]["peripheral"] = "LED_0";
+            settingsBank["triggers"][0]["peripheral"] = 0;
             settingsBank["triggers"][0]["event"] = "onPvw";
             settingsBank["triggers"][0]["srcId"] = 1;
-            settingsBank["triggers"][0]["assignedSrcId"] = 0;
             settingsBank["triggers"][0]["colour"] = "00FF00";
             settingsBank["triggers"][0]["brightness"] = 50;
 
             settingsBank["triggers"][1]["id"] = 1;
-            settingsBank["triggers"][1]["peripheral"] = "LED_0";
+            settingsBank["triggers"][1]["peripheral"] = 0;   // Change to ID
             settingsBank["triggers"][1]["event"] = "onPgm";
             settingsBank["triggers"][1]["srcId"] = 1;
-            settingsBank["triggers"][1]["assignedSrcId"] = 0;
             settingsBank["triggers"][1]["colour"] = "FF0000";
             settingsBank["triggers"][1]["brightness"] = 50;
 
             settingsBank["triggers"][2]["id"] = 2;
-            settingsBank["triggers"][2]["peripheral"] = "LED_0";
+            settingsBank["triggers"][2]["peripheral"] = 0;
             settingsBank["triggers"][2]["event"] = "searching";
-            settingsBank["triggers"][2]["srcId"] = "-";
-            settingsBank["triggers"][2]["assignedSrcId"] = 0;
+            settingsBank["triggers"][2]["srcId"] = -1;
             settingsBank["triggers"][2]["colour"] = "0000FF";
             settingsBank["triggers"][2]["brightness"] = 50;
 
             settingsBank["triggers"][3]["id"] = 3;
-            settingsBank["triggers"][3]["peripheral"] = "LED_0";
+            settingsBank["triggers"][3]["peripheral"] = 0;
             settingsBank["triggers"][3]["event"] = "connecting";
-            settingsBank["triggers"][3]["srcId"] = "-";
-            settingsBank["triggers"][3]["assignedSrcId"] = 0;
+            settingsBank["triggers"][3]["srcId"] = -1;
             settingsBank["triggers"][3]["colour"] = "0000FF";
             settingsBank["triggers"][3]["brightness"] = 50;
 
             settingsBank["triggers"][4]["id"] = 4;
-            settingsBank["triggers"][4]["peripheral"] = "LED_0";
+            settingsBank["triggers"][4]["peripheral"] = 0;
             settingsBank["triggers"][4]["event"] = "configuration";
-            settingsBank["triggers"][4]["srcId"] = "-";
-            settingsBank["triggers"][4]["assignedSrcId"] = 0;
+            settingsBank["triggers"][4]["srcId"] = -1;
             settingsBank["triggers"][4]["colour"] = "FFFF00";
             settingsBank["triggers"][4]["brightness"] = 50;
+
 
             settingsBank["network"]["targetAddress"] = "";
             settingsBank["network"]["wifi"]["ssid"] = "";
@@ -86,17 +91,34 @@ namespace tally {
             settingsBank["network"]["wifi"]["gateway"] = "192.168.255.1";
             settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";
 
+            /*settingsBank["peripherals"]["LED_0"]["id"] = 0;
             settingsBank["peripherals"]["LED_0"]["type"] = "WS2811";
             settingsBank["peripherals"]["LED_0"]["rgbOrder"] = "GRB";
             settingsBank["peripherals"]["LED_0"]["pwrPin"] = 19;
             settingsBank["peripherals"]["LED_0"]["ctrlPin"] = 18;
             settingsBank["peripherals"]["LED_0"]["count"] = 1;
 
+            settingsBank["peripherals"]["LED_1"]["id"] = 1;
             settingsBank["peripherals"]["LED_1"]["type"] = "WS2811";
             settingsBank["peripherals"]["LED_1"]["rgbOrder"] = "GRB";
             settingsBank["peripherals"]["LED_1"]["pwrPin"] = 12;
             settingsBank["peripherals"]["LED_1"]["ctrlPin"] = 14;
-            settingsBank["peripherals"]["LED_1"]["count"] = 1;
+            settingsBank["peripherals"]["LED_1"]["count"] = 1;*/
+            settingsBank["peripherals"][0]["id"] = 0;
+            settingsBank["peripherals"][0]["name"] = "LED 0";
+            settingsBank["peripherals"][0]["type"] = "WS2811";
+            settingsBank["peripherals"][0]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"][0]["pwrPin"] = 19;
+            settingsBank["peripherals"][0]["ctrlPin"] = 18;
+            settingsBank["peripherals"][0]["count"] = 1;
+
+            settingsBank["peripherals"][1]["id"] = 1;
+            settingsBank["peripherals"][1]["name"] = "LED 1";
+            settingsBank["peripherals"][1]["type"] = "WS2811";
+            settingsBank["peripherals"][1]["rgbOrder"] = "GRB";
+            settingsBank["peripherals"][1]["pwrPin"] = 14;
+            settingsBank["peripherals"][1]["ctrlPin"] = 12;
+            settingsBank["peripherals"][1]["count"] = 2;
 
             settingsBank["board"]["firmware"]["version"] = tally::firmware::version;
             settingsBank["state"]["status"] = "disconnected";
@@ -113,15 +135,20 @@ namespace tally {
             std::string settings_str;
             serializeJson(settingsBank, settings_str);
             preferences.putString("settings", settings_str.c_str());
+
+            serializeJson(privateBank, settings_str);
+            preferences.putString("private", settings_str.c_str());
             hasUnsavedChanges = false;
             return true;
         }
 
         bool load() {
             std::string settings_str = preferences.getString("settings", "").c_str();
+            std::string private_str = preferences.getString("private", "").c_str();
             if(settings_str.length() > 0) {
                 settingsMutex.lock();
                 deserializeJson(settingsBank, settings_str);
+                deserializeJson(privateBank, private_str);
                 settingsMutex.unlock();
             } else {
                 Serial.println("No settings found in flash! Writing default");
@@ -152,7 +179,12 @@ namespace tally {
             while (t != nullptr) {           
                 JsonVariant foundObject;
                 if(tmp.is<JsonArray>()) {
-                    foundObject = tmp.as<JsonArray>()[std::stoi(t)].as<JsonVariant>();
+                    // Search item based on ID 
+                    for(auto item : tmp.as<JsonArray>()) {
+                        if(item["id"] == std::stoi(t)) {
+                            foundObject = item;
+                        }
+                    }
                 } else {
                     foundObject = tmp[t];
                 }
@@ -212,17 +244,22 @@ namespace tally {
         bool create(String path, JsonVariant value) {
             String p = path.substring(0, path.lastIndexOf('/'));
             String resource = path.substring(path.lastIndexOf('/') + 1);
-            Serial.printf("Create node path %s , node %s \n", p.c_str(), resource.c_str());
-            auto item = _find(p.c_str()).value();
             settingsMutex.lock();
-            try {
-                // Is it a number
-                auto index = std::stoi(resource.c_str());
-                item[index] = value;
-            } catch (std::invalid_argument const& ex) {
-                // Nope it was a string
-                 item[resource] = value;
+            if(p.isEmpty()) {
+                // TODO: FIX THIS HACK SOLUTION
+                settingsBank[resource].add(value);
+            } else {
+                auto item = _find(p.c_str()).value();
+                try {
+                    // Is it a number
+                    auto index = std::stoi(resource.c_str());
+                    item[index] = value;
+                } catch (std::invalid_argument const& ex) {
+                    // Nope it was a string
+                    item[resource] = value;
+                }
             }
+             
             
             settingsMutex.unlock();
             return true;
