@@ -71,34 +71,48 @@ namespace tally {
                 led->show();
             });
 
-            for(auto trigger : triggers) {
-                if(trigger["event"] == status.value() || 
-                ((trigger["event"] == "onPgm") && (pgm.value() + 1) == trigger["srcId"].as<int>()) ||
-                ((trigger["event"] == "onPvw") && (pvw.value() + 1) == trigger["srcId"].as<int>())) {
-                    auto pifId = trigger["peripheral"].as<int>();
-                    auto led = leds[pifAllocationMap[pifId].as<int>()];
-                    auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
-                    auto brightness = trigger["brightness"].as<uint8_t>();
+            std::vector<std::pair<uint32_t, uint8_t>> colorBrightness(leds.size());
 
-                     bool hasChanges = false;
-                    uint8_t calcBrightness = brightness * (uint8_t)255 / (uint8_t)100;
-                    if(led->getBrightness() != calcBrightness) {
-                        led->setBrightness(calcBrightness);
-                        hasChanges = true;
-                    }
+            // Go through the triggers in prio, 1. PGM , 2. PVW, 3. Other
+            // Change this to go through the LEDS, then the triggers
+            // Other
+            for(auto trigger : triggers) { 
+                auto pifId = trigger["peripheral"].as<int>();
+                auto led = leds[pifAllocationMap[pifId]];
+                auto event = trigger["event"].as<String>();
+                if(event.c_str() == status.value()) {
+                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
+                }
 
-                    for(uint16_t i = 0; i < led->numPixels(); i ++) {   
-                        if(led->getPixelColor(i) != colour) {
-                            led->setPixelColor(i, colour);
-                            hasChanges = true;
-                        }
-                    }
-
-                     if(hasChanges)
-                            led->show();
-
-                } 
             }
+
+            // PVW
+            for(auto trigger : triggers) {
+                auto pifId = trigger["peripheral"].as<int>();
+                auto led = leds[pifAllocationMap[pifId].as<int>()];
+                auto event = trigger["event"].as<String>();
+                if(status.value() == "connected" && event == "onPvw" && (pvw.value() + 1) == trigger["srcId"].as<int>())
+                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
+            }
+
+            // PGM
+            for(auto trigger : triggers) {
+                auto pifId = trigger["peripheral"].as<int>();
+                auto led = leds[pifAllocationMap[pifId]];
+                auto event = trigger["event"].as<String>();
+                if(status.value() == "connected" &&  event == "onPgm" && (pgm.value() + 1) == trigger["srcId"].as<int>())
+                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
+            }
+
+            for(int i = 0; i < colorBrightness.size(); i++) {
+                auto led = leds[i];
+                for(uint16_t i = 0; i < led->numPixels(); i ++)
+                    led->setPixelColor(i, colorBrightness[i].first);
+                led->setBrightness(colorBrightness[i].second);
+                led->show();
+            } 
+                
+
         }
 
         void setPixelColor(uint8_t r, uint8_t g, uint8_t b) {
