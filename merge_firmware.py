@@ -9,7 +9,7 @@ def merge_bin(source, target, env):
     srcDir = env.get("PROJECT_INCLUDE_DIR")
     version = "unknown"
     with open(srcDir + "/tally-firmware.hpp") as f:
-        version = re.search("\"(\d+\.\d+\.\d+)\"", f.read()).group()
+        version = re.search(r"\"(\d+\.\d+\.\d+)\"", f.read()).group()
 
     flash_images = env.Flatten(env.get("FLASH_EXTRA_IMAGES", [])) + [ "0x187000", "$BUILD_DIR/${ESP32_FS_IMAGE_NAME}.bin" ] + ["$ESP32_APP_OFFSET", APP_BIN]
 
