@@ -9,8 +9,9 @@ namespace target {
         OBS(IPAddress address, uint16_t port);
         ~OBS() {}
         bool connect(Client* client, int numRetries = 0) override;
-        std::vector<uint8_t> onPgm() override;
-        std::vector<uint8_t> onPvw() override;
+        bool onPgm(uint8_t srcId) override;
+        bool onPvw(uint8_t srcId) override;
+        bool handleTrigger(JsonVariant trigger) override { return false; }
         bool receive() override;
         virtual bool connected() override;
 

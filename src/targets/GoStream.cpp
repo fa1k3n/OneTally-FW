@@ -1,6 +1,8 @@
 #include "GoStream.hpp"
 #include <CRC16.h>
 #include <algorithm>
+#include <tally-led.hpp>
+#include "tally-settings.hpp"
 
 #define SSRC_ID 5
 
@@ -19,69 +21,66 @@ namespace target {
     GoStream::GoStream(IPAddress address, uint16_t port) : Target(address, port) {
     }
     
+    unsigned long lastResp = millis();
+    void pingWorker2(void *pvParameters) {
+        GoStream* switcher = (GoStream*)(pvParameters);
+        while(1) {
+            if(millis() - lastResp > 4000) {
+                Serial.println("Lost connection");
+                tally::settings::update("/state/status", "connecting");
+            }
+            switcher->sendMessage_("pgmTally");
+            switcher->sendMessage_("pvwTally");
+            delay(3000);
+        }
+    }
+
     bool GoStream::connect(Client* client, int numRetries) {
         Target::connect(client, numRetries);        
         if(client_->connected()) {
-            sendMessage_("pvwIndex");
-            sendMessage_("keyOnAir");
-            sendMessage_("pgmIndex");
-            sendMessage_("autoTransition");
-            sendMessage_("superSourceSource1");
-            sendMessage_("superSourceSource2");
-            sendMessage_("superSourceBackground");
-            sendMessage_("pipSource");
-            sendMessage_("upStreamKeyType");
-            sendMessage_("transitionSource");
-            //sendMessage_("pgmTally");
-            //sendMessage_("pvwTally");
+            lastResp = millis();
+            sendMessage_("pgmTally");
+            sendMessage_("pvwTally");
+            //xTaskCreatePinnedToCore(pingWorker2, "Ping worker", 10000, this, 1, NULL, 0);
         }
         return client_->connected();
     }
 
-    std::vector<uint8_t> GoStream::onPgm() {
-        std::vector<uint8_t> srcs = { state_.pgmId };
-
-        // Supersource 
-        if(state_.pgmId == SSRC_ID) {
-            // TODO: Check what ssrc sources are visible and enabled before this
-            srcs.push_back(state_.ssrcSrc1Id);
-            srcs.push_back(state_.ssrcSrc2Id);
-            srcs.push_back(state_.ssrcBkgId);
+    bool GoStream::onPgm(uint8_t srcId) {
+        if(std::find(pgmIds_.begin(), pgmIds_.end(), srcId) != pgmIds_.end()) {
+            return true;
         }
-
-        // USK
-        if(state_.uskActive) {
-            srcs.push_back(state_.uskFillSrcId[state_.uskType]);
+        return false;
+    }
+    
+    bool GoStream::onPvw(uint8_t srcId) {
+        if(std::find(pvwIds_.begin(), pvwIds_.end(), srcId) != pvwIds_.end()) {
+            return true;
         }
-
-        // Transition, both sources "live" on pgm
-        if(state_.transitionOngoing) {
-            srcs.push_back(state_.pvwId);
-        }
-
-        return srcs;
+        return false;
     }
 
-    std::vector<uint8_t> GoStream::onPvw() {
-        std::vector<uint8_t> srcs = { state_.pvwId };
-         // Supersource 
-        if(state_.pvwId == SSRC_ID) {
-            // TODO: Check what ssrc sources are visible and enabled before this
-            srcs.push_back(state_.ssrcSrc1Id);
-            srcs.push_back(state_.ssrcSrc2Id);
-            srcs.push_back(state_.ssrcBkgId);
+    bool GoStream::handleTrigger(JsonVariant trigger) {
+        auto srcId = trigger["srcId"].as<int>();
+        auto event = trigger["event"].as<String>();
+        auto pifId = trigger["peripheral"].as<int>();
+        auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+        auto brightness = trigger["brightness"].as<uint8_t>();
+
+        if(event == "tally") {
+          if(onPgm(srcId)) {
+            tally::led::show(pifId, colour, brightness);
+            return true;
+          } else if(onPvw(srcId)) {
+            auto altColour = std::strtoul(trigger["colourAlt"].as<String>().c_str(), NULL, 16);
+            tally::led::show(pifId, altColour, brightness);  
+            return true;
+          }
         }
 
-        // USK
-        if(state_.transitionSource & USK)
-            srcs.push_back(state_.uskFillSrcId[state_.uskType]);
-
-        // Transition, both sources "live" on pvw
-        if(state_.transitionOngoing)
-            srcs.push_back(state_.pgmId);
-
-        return srcs;
+        return false;
     }
+
 
     bool GoStream::sendMessage_(String message) {
         JsonDocument json;
@@ -113,27 +112,59 @@ namespace target {
         return true;
     }
 
+    uint8_t packet[1024];
+    uint8_t dataIndex = 0;
     bool GoStream::receiveMessages_() {
+        // No pending packets, clear it
+        if(dataIndex == 0)
+            memset(packet, 0, 1024 * sizeof(uint8_t));
         while(client_->available() > 0) {
             int c = client_->peek();
-            
-            if((char)c != '{') {
-                client_->read();
-            } else {
-                auto* msg = new JsonDocument();
-                DeserializationError error = deserializeJson(*msg, *client_);
-                messageQueue_.push(msg);
-
-                // JSON misses last char and then read CRC 
-                client_->read();
-                client_->read();
-                client_->read();
-
-                if (error) {
-                Serial.print(F("deserializeJson() failed: "));
-                Serial.println(error.f_str());
-                return false;
+            if(c != -1) {
+                dataIndex += client_->readBytes((uint8_t*)&packet[dataIndex], 5);
+                // Check that enough has been read that we have the header
+                if(dataIndex < 5) {
+                    Serial.println("Incomplete packet header");
+                    continue;
                 }
+
+                // At least header has been received, check magic number
+                if(packet[0] != 0xeb || packet[1] != 0xa6) {
+                    Serial.println("Header is not correct. Throwing away frame");
+                    client_->flush();
+                    continue;
+                }
+
+                // Correct header, read data
+                uint16_t len = packet[4] << 8 | packet[3];
+                dataIndex += client_->readBytes((uint8_t*)&packet[dataIndex], len);
+
+                // Not all data received, save current write pointer
+                if(dataIndex < len) {
+                    Serial.printf("Incomplete packet data. Write pointer saved at %i\n", dataIndex);
+                    continue;
+                }
+                    
+                dataIndex = 0;
+                // Complete package read, check that CRC is correct
+                CRC16 crc(CRC16_MODBUS_POLYNOME,
+                            CRC16_MODBUS_INITIAL,
+                            CRC16_MODBUS_XOR_OUT,
+                            CRC16_MODBUS_REV_IN,
+                            CRC16_MODBUS_REV_OUT);
+                crc.add(packet, len + 5 - 2);
+
+                uint16_t calculatedCrcSum = crc.calc();
+                uint16_t receivedCrcSum = packet[len + 5 - 1] << 8 | packet[len + 5 - 2];
+                if(calculatedCrcSum != receivedCrcSum) {
+                    Serial.printf("CRC is not correct. Received 0x%4x, calc 0x%4x\n", receivedCrcSum, calculatedCrcSum);
+                    continue;
+                }
+
+                // CRC is OK, deserialize data
+                auto* msg = new JsonDocument();
+                DeserializationError error = deserializeJson(*msg, &packet[5]);
+                messageQueue_.push(msg);
             }
         }
         return true;
@@ -143,50 +174,18 @@ namespace target {
     void GoStream::handleMessage_(JsonDocument& doc) {
         String command = String((doc)["id"].as<const char *>());
         JsonArray value =  (doc)["value"].as<JsonArray>();
-        if(command == String("pvwIndex")) {
-        state_.pvwId = value[0];
-        DEBUG_PRINT(state.pvwId);
-        } else if(command == String("pgmIndex")) {
-        state_.pgmId = value[0];
-        DEBUG_PRINT(state.pgmId);
-        } else if(command == String("pgmTally")) {
-        //state_.pvwId = value[0];
-        Serial.println("PGM TALLY");
-        serializeJsonPretty(value, Serial);
+        if(command == String("pgmTally")) {
+            pgmIds_.clear();
+            for(auto id : value) {
+                pgmIds_.push_back(id.as<uint8_t>());
+            }
+            lastResp = millis();
         } else if(command == String("pvwTally")) {
-        //state_.pgmId = value[0];
-        Serial.println("PVW TALLY");
-        serializeJsonPretty(value, Serial);
-        } else if(command == String("autoTransition")) {
-        state_.transitionOngoing = value[0] == 1 ? true : false;
-        DEBUG_PRINT(state.transitionOngoing);
-        } else if(command == String("superSourceSource1")) {
-        state_.ssrcSrc1Id = value[0];
-        DEBUG_PRINT(state.ssrcSrc1Id);
-        } else if(command == String("superSourceSource2")) {
-        state_.ssrcSrc2Id = value[0];
-        DEBUG_PRINT(state.ssrcSrc2Id);
-        } else if(command == String("superSourceBackground")) {
-        state_.ssrcBkgId = value[0];
-        DEBUG_PRINT(state.ssrcBkgId);
-        } else if(command == String("upStreamKeyType")) {
-        state_.uskType = value[0];
-        DEBUG_PRINT(state.uskType);
-        } else if(command == String("pipSource")) {
-        state_.uskFillSrcId[PIP] = value[0];
-        DEBUG_PRINT(state.pipSrcId);
-        } else if(command == String("keyOnAir")) {
-        state_.uskActive = value[0] == 1 ? true : false;
-        DEBUG_PRINT(state.uskActive);
-        } else if(command == String("transitionSource")) {
-        state_.transitionSource = value[0];
-        DEBUG_PRINT(state.transitionSource);
-        } else if(command == String("upStreamKeyFillKeyType")) {
-        int type = value[0].as<int>();
-        state_.uskFillSrcId[type] = value[1];
-        if(type == LUMA)
-            state_.lumaKeySrcId = value[2];
-        DEBUG_PRINT(state.transitionSource);
+            pvwIds_.clear();
+            for(auto id : value) {
+                pvwIds_.push_back(id.as<uint8_t>());
+            }
+            lastResp = millis();
         } 
     }
 

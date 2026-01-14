@@ -38,6 +38,7 @@ namespace target {
         if(address_.toString() == "") return false;
         uint8_t i = 0;
         while(!client_->connect(address_, port_) && i++ <= numTries) {
+            sleep(1);
         }
         /*if(client_->connected()) {
            pingInfo = { this, address_};
@@ -71,8 +72,9 @@ namespace target {
         return false;
     }
 
-    std::vector<uint8_t> Target::onPgm() { return {}; };
-    std::vector<uint8_t> Target::onPvw() { return {}; };
+    bool Target::onPgm(uint8_t srcId) { return false; };
+    bool Target::onPvw(uint8_t srcId) { return false; };
     bool Target::receive() { return false; }
+    bool Target::handleTrigger(JsonVariant trigger) { return false; }
 
 }

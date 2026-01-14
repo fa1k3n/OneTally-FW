@@ -86,12 +86,12 @@ namespace target {
         return true; 
     }
 
-    std::vector<uint8_t> OBS::onPgm() {
-        return {};
+    bool OBS::onPgm(uint8_t srcId) {
+        return false;
     }
 
-    std::vector<uint8_t> OBS::onPvw() {
-        return {};
+    bool OBS::onPvw(uint8_t srcId) {
+        return false;
     }
 
     bool OBS::receive() {

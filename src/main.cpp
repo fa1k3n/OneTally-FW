@@ -25,14 +25,31 @@ void initializeDevice() {
 
 void updateTally() {
   if(switcher) {
-   // int srcId = tally::settings::query<int>("/triggers/0/srcId").value();
-    auto pvw = switcher->onPvw();
-    auto pgm = switcher->onPgm();
-    if(pvw.size() > 0)
-      tally::settings::update("/state/pvw", pvw[0]);
-    if(pgm.size() > 0)
-      tally::settings::update("/state/pgm", pgm[0]);
+    JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
+    JsonArray pifs = tally::settings::query<JsonArray>("/peripherals").value();
+    auto state = tally::settings::query<std::string>("/state/status").value();
+    bool isUpdated = false;
+    for(auto pif : pifs) {
+      for(auto trigger : triggers) { 
+        auto srcId = trigger["srcId"].as<int>();
+        auto event = trigger["event"].as<String>();
+        auto pifId = trigger["peripheral"].as<int>();
+        if(pifId != pif["id"].as<int>()) continue;  // This trigger is not for current pif
 
+        auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+        auto brightness = trigger["brightness"].as<uint8_t>();
+
+        if(switcher->handleTrigger(trigger)) {
+          isUpdated = true;
+        } else if(event == String(state.c_str())) {
+            tally::led::show(pifId, colour, brightness);
+            isUpdated = true;
+            break;
+        } 
+      }
+    }
+    if(!isUpdated)
+      tally::led::clear();
   }
 }
 
@@ -108,8 +125,9 @@ void connect() {
 
 void ledWorker(void *pvParameters) {
   while(1) {
-    tally::led::show();
-    delay(200);
+    //tally::led::show();
+    updateTally();
+    delay(2000);
   }
 }
 
@@ -120,6 +138,14 @@ void serialWorker(void *pvParameters) {
   }
 }
 
+void batteryWorker(void *pvParameters) {
+  while(1) {
+    int digitalValue = analogRead(GPIO_NUM_34);// read the value from the analog channel
+    float Aout = digitalValue * (3.20 / (4096.00 - 1.00));
+    Serial.println(digitalValue);
+    delay(1000);
+  }
+}
 void setup() {
   Serial.begin(921600);
   initializeDevice();
@@ -127,6 +153,8 @@ void setup() {
     ledWorker, "LED worker", 10000, NULL, 2, &ledTask, 0);
   xTaskCreatePinnedToCore(
     serialWorker, "Serial worker", 10000, NULL, 1, NULL, 0);
+  //xTaskCreatePinnedToCore(
+  //  batteryWorker, "Battery worker", 10000, NULL, 1, NULL, 0);
   connect();
 
 }
@@ -161,8 +189,8 @@ void loop() {
         tally::settings::update("/state/status", "connecting");
       } 
     } else {
-      switcher->receive();
+      if(switcher->receive())
+          updateTally();
     }
   }
-  updateTally();
 }

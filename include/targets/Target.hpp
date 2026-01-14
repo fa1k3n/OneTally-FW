@@ -3,6 +3,7 @@
 
 #include "Client.h"
 #include <vector>
+#include <ArduinoJson.h>
 
 namespace target {
     class Target {
@@ -12,8 +13,9 @@ namespace target {
         virtual bool connect(Client* client, int numRetries = 0);
         virtual bool connected();
         virtual bool disconnect();
-        virtual std::vector<uint8_t> onPgm();
-        virtual std::vector<uint8_t> onPvw();
+        virtual bool onPgm(uint8_t srcId);
+        virtual bool onPvw(uint8_t srcId);
+        virtual bool handleTrigger(JsonVariant trigger);
         virtual bool receive();
 
         protected:

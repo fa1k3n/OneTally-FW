@@ -55,63 +55,16 @@ namespace tally {
         }
 
         void clear() {
-            std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { led->clear(); });
+            std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { led->clear(); led->show(); });
         }
 
-        void show() {
-            auto status = tally::settings::query<std::string>("/state/status");
-            auto pvw = tally::settings::query<int>("/state/pvw");
-            auto pgm = tally::settings::query<int>("/state/pgm");
-            if(!status) return;
-            JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
-            JsonArray pifs = tally::settings::query<JsonVariant>("/peripherals").value();
+        void show(int pifId, uint32_t colour, uint8_t brightness) {
+            auto led = leds[pifAllocationMap[pifId]];
+            for(uint16_t i = 0; i < led->numPixels(); i ++)
+                led->setPixelColor(i, colour);
+            led->setBrightness(brightness);
+            led->show();
 
-            std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { 
-                led->clear(); 
-                led->show();
-            });
-
-            std::vector<std::pair<uint32_t, uint8_t>> colorBrightness(leds.size());
-
-            // Go through the triggers in prio, 1. PGM , 2. PVW, 3. Other
-            // Change this to go through the LEDS, then the triggers
-            // Other
-            for(auto trigger : triggers) { 
-                auto pifId = trigger["peripheral"].as<int>();
-                auto led = leds[pifAllocationMap[pifId]];
-                auto event = trigger["event"].as<String>();
-                if(event.c_str() == status.value()) {
-                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
-                }
-
-            }
-
-            // PVW
-            for(auto trigger : triggers) {
-                auto pifId = trigger["peripheral"].as<int>();
-                auto led = leds[pifAllocationMap[pifId].as<int>()];
-                auto event = trigger["event"].as<String>();
-                if(status.value() == "connected" && event == "onPvw" && (pvw.value() + 1) == trigger["srcId"].as<int>())
-                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
-            }
-
-            // PGM
-            for(auto trigger : triggers) {
-                auto pifId = trigger["peripheral"].as<int>();
-                auto led = leds[pifAllocationMap[pifId]];
-                auto event = trigger["event"].as<String>();
-                if(status.value() == "connected" &&  event == "onPgm" && (pgm.value() + 1) == trigger["srcId"].as<int>())
-                    colorBrightness[pifAllocationMap[pifId]] = std::make_pair(std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16), trigger["brightness"].as<uint8_t>());   
-            }
-
-            for(int i = 0; i < colorBrightness.size(); i++) {
-                auto led = leds[i];
-                for(uint16_t i = 0; i < led->numPixels(); i ++)
-                    led->setPixelColor(i, colorBrightness[i].first);
-                led->setBrightness(colorBrightness[i].second);
-                led->show();
-            } 
-                
 
         }
 

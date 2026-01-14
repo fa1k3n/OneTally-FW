@@ -49,16 +49,18 @@ namespace tally {
 
             settingsBank["triggers"][0]["id"] = 0;
             settingsBank["triggers"][0]["peripheral"] = 0;
-            settingsBank["triggers"][0]["event"] = "onPvw";
-            settingsBank["triggers"][0]["srcId"] = 1;
-            settingsBank["triggers"][0]["colour"] = "00FF00";
+            settingsBank["triggers"][0]["event"] = "tally";
+            settingsBank["triggers"][0]["srcId"] = 0;
+            settingsBank["triggers"][0]["colour"] = "FF0000";
+            settingsBank["triggers"][0]["colourAlt"] = "00FF00";
             settingsBank["triggers"][0]["brightness"] = 50;
 
             settingsBank["triggers"][1]["id"] = 1;
-            settingsBank["triggers"][1]["peripheral"] = 0;   // Change to ID
-            settingsBank["triggers"][1]["event"] = "onPgm";
-            settingsBank["triggers"][1]["srcId"] = 1;
+            settingsBank["triggers"][1]["peripheral"] = 1;
+            settingsBank["triggers"][1]["event"] = "tally";
+            settingsBank["triggers"][1]["srcId"] = 0;
             settingsBank["triggers"][1]["colour"] = "FF0000";
+            settingsBank["triggers"][1]["colourAlt"] = "00FF00";
             settingsBank["triggers"][1]["brightness"] = 50;
 
             settingsBank["triggers"][2]["id"] = 2;
@@ -83,9 +85,9 @@ namespace tally {
             settingsBank["triggers"][4]["brightness"] = 50;
 
 
-            settingsBank["network"]["targetAddress"] = "";
-            settingsBank["network"]["wifi"]["ssid"] = "";
-            settingsBank["network"]["wifi"]["pwd"] = "";
+            settingsBank["network"]["targetAddress"] = "192.168.68.126";
+            settingsBank["network"]["wifi"]["ssid"] = "Familjen";
+            settingsBank["network"]["wifi"]["pwd"] = "helenajohan";
             settingsBank["network"]["wifi"]["manualCfg"] = false;
             settingsBank["network"]["wifi"]["address"] = "";
             settingsBank["network"]["wifi"]["gateway"] = "192.168.255.1";
@@ -110,7 +112,7 @@ namespace tally {
             settingsBank["peripherals"][0]["rgbOrder"] = "GRB";
             settingsBank["peripherals"][0]["pwrPin"] = 19;
             settingsBank["peripherals"][0]["ctrlPin"] = 18;
-            settingsBank["peripherals"][0]["count"] = 1;
+            settingsBank["peripherals"][0]["count"] = 3;
 
             settingsBank["peripherals"][1]["id"] = 1;
             settingsBank["peripherals"][1]["name"] = "LED 1";
