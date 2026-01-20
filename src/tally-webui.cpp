@@ -120,12 +120,6 @@ namespace tally {
 
         bool init() {
           
-  
-             if(!SPIFFS.begin(true)){
-                  Serial.println("An Error has occurred while mounting SPIFFS");
-                        return false;
-            }
-
             int n = WiFi.scanNetworks();
 
             if (n != 0) {

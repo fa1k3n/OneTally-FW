@@ -3,7 +3,8 @@
 #include <Preferences.h>
 #include <mutex>
 #include <string>
-
+#include <fstream>
+#include <SPIFFS.h>
 
 
 namespace tally {
@@ -34,99 +35,23 @@ namespace tally {
         }
 
         bool reset() {
+ 
             settingsMutex.lock();
             preferences.clear();
             settingsBank.clear();
+            File settingsFile = SPIFFS.open("/defaults.json", "r");
+            if(!settingsFile) {
+                Serial.println("Error reading file");
+            }
+
+            deserializeJson(settingsBank, settingsFile);
+            settingsFile.close();
             settingsBank["debug"] = false;
-
-            privateBank["debug"] = false;
-            privateBank["nextPIFIndex"] = 3;
-            privateBank["nextTRIGIndex"] = 3;
-            settingsBank["targets"][0]["type"] = "gostream";
-            settingsBank["targets"][0]["name"] = "GoStream";
-            // settingsBank["targets"][1]["type"] = "obs";
-            // settingsBank["targets"][1]["name"] = "OBS";
-
-            settingsBank["triggers"][0]["id"] = 0;
-            settingsBank["triggers"][0]["peripheral"] = 0;
-            settingsBank["triggers"][0]["event"] = "tally";
-            settingsBank["triggers"][0]["srcId"] = 0;
-            settingsBank["triggers"][0]["colour"] = "FF0000";
-            settingsBank["triggers"][0]["colourAlt"] = "00FF00";
-            settingsBank["triggers"][0]["brightness"] = 50;
-
-            settingsBank["triggers"][1]["id"] = 1;
-            settingsBank["triggers"][1]["peripheral"] = 1;
-            settingsBank["triggers"][1]["event"] = "tally";
-            settingsBank["triggers"][1]["srcId"] = 0;
-            settingsBank["triggers"][1]["colour"] = "FF0000";
-            settingsBank["triggers"][1]["colourAlt"] = "00FF00";
-            settingsBank["triggers"][1]["brightness"] = 50;
-
-            settingsBank["triggers"][2]["id"] = 2;
-            settingsBank["triggers"][2]["peripheral"] = 0;
-            settingsBank["triggers"][2]["event"] = "searching";
-            settingsBank["triggers"][2]["srcId"] = -1;
-            settingsBank["triggers"][2]["colour"] = "0000FF";
-            settingsBank["triggers"][2]["brightness"] = 50;
-
-            settingsBank["triggers"][3]["id"] = 3;
-            settingsBank["triggers"][3]["peripheral"] = 0;
-            settingsBank["triggers"][3]["event"] = "connecting";
-            settingsBank["triggers"][3]["srcId"] = -1;
-            settingsBank["triggers"][3]["colour"] = "0000FF";
-            settingsBank["triggers"][3]["brightness"] = 50;
-
-            settingsBank["triggers"][4]["id"] = 4;
-            settingsBank["triggers"][4]["peripheral"] = 0;
-            settingsBank["triggers"][4]["event"] = "configuration";
-            settingsBank["triggers"][4]["srcId"] = -1;
-            settingsBank["triggers"][4]["colour"] = "FFFF00";
-            settingsBank["triggers"][4]["brightness"] = 50;
-
-
-            settingsBank["network"]["targetAddress"] = "192.168.68.126";
-            settingsBank["network"]["wifi"]["ssid"] = "Familjen";
-            settingsBank["network"]["wifi"]["pwd"] = "helenajohan";
-            settingsBank["network"]["wifi"]["manualCfg"] = false;
-            settingsBank["network"]["wifi"]["address"] = "";
-            settingsBank["network"]["wifi"]["gateway"] = "192.168.255.1";
-            settingsBank["network"]["wifi"]["netmask"] = "255.255.255.0";
-
-            /*settingsBank["peripherals"]["LED_0"]["id"] = 0;
-            settingsBank["peripherals"]["LED_0"]["type"] = "WS2811";
-            settingsBank["peripherals"]["LED_0"]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"]["LED_0"]["pwrPin"] = 19;
-            settingsBank["peripherals"]["LED_0"]["ctrlPin"] = 18;
-            settingsBank["peripherals"]["LED_0"]["count"] = 1;
-
-            settingsBank["peripherals"]["LED_1"]["id"] = 1;
-            settingsBank["peripherals"]["LED_1"]["type"] = "WS2811";
-            settingsBank["peripherals"]["LED_1"]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"]["LED_1"]["pwrPin"] = 12;
-            settingsBank["peripherals"]["LED_1"]["ctrlPin"] = 14;
-            settingsBank["peripherals"]["LED_1"]["count"] = 1;*/
-            settingsBank["peripherals"][0]["id"] = 0;
-            settingsBank["peripherals"][0]["name"] = "LED 0";
-            settingsBank["peripherals"][0]["type"] = "WS2811";
-            settingsBank["peripherals"][0]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"][0]["pwrPin"] = 19;
-            settingsBank["peripherals"][0]["ctrlPin"] = 18;
-            settingsBank["peripherals"][0]["count"] = 3;
-
-            settingsBank["peripherals"][1]["id"] = 1;
-            settingsBank["peripherals"][1]["name"] = "LED 1";
-            settingsBank["peripherals"][1]["type"] = "WS2811";
-            settingsBank["peripherals"][1]["rgbOrder"] = "GRB";
-            settingsBank["peripherals"][1]["pwrPin"] = 14;
-            settingsBank["peripherals"][1]["ctrlPin"] = 12;
-            settingsBank["peripherals"][1]["count"] = 2;
-
             settingsBank["board"]["firmware"]["version"] = tally::firmware::version;
             settingsBank["state"]["status"] = "disconnected";
             settingsBank["state"]["dhcpAddress"] = "";
             settingsBank["state"]["pgm"] = (int)0;
-            settingsBank["state"]["pvw"] = (int)0;
+            settingsBank["state"]["pvw"] = (int)0; 
             
             commit();
             settingsMutex.unlock();

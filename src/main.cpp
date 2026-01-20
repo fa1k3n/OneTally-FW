@@ -9,15 +9,21 @@
 #include "tally-settings.hpp"
 #include "tally-led.hpp"
 #include "tally-webui.hpp"
+#include <SPIFFS.h>
 
 WiFiClient client, webclient;
-target::Target* switcher = nullptr;
+module::OneTallyModule* switcher = nullptr;
 
 TaskHandle_t ledTask;
 
 bool smartModeInitialized = false;
 
 void initializeDevice() {
+              if(!SPIFFS.begin(true)){
+                  Serial.println("An Error has occurred while mounting SPIFFS");
+                        return;
+            }
+
   tally::settings::init();
   tally::led::init();
   tally::serial::init();
@@ -26,27 +32,28 @@ void initializeDevice() {
 void updateTally() {
   if(switcher) {
     JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
-    JsonArray pifs = tally::settings::query<JsonArray>("/peripherals").value();
-    auto state = tally::settings::query<std::string>("/state/status").value();
     bool isUpdated = false;
-    for(auto pif : pifs) {
-      for(auto trigger : triggers) { 
-        auto srcId = trigger["srcId"].as<int>();
-        auto event = trigger["event"].as<String>();
-        auto pifId = trigger["peripheral"].as<int>();
-        if(pifId != pif["id"].as<int>()) continue;  // This trigger is not for current pif
+    auto moduleInfo = switcher->getInfo();
+    for(auto trigger : triggers) { 
+      auto srcId = trigger["srcId"].as<int>();
+      auto event = trigger["event"].as<String>();
+      auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+      auto brightness = trigger["brightness"].as<uint8_t>();
 
-        auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
-        auto brightness = trigger["brightness"].as<uint8_t>();
+      for(auto moduleTriggers : moduleInfo->triggers) {
+          String qualifiedTriggerName = moduleInfo->moduleName + ":" + moduleTriggers;
 
         if(switcher->handleTrigger(trigger)) {
-          isUpdated = true;
-        } else if(event == String(state.c_str())) {
+          auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+          auto brightness = trigger["brightness"].as<uint8_t>();
+          auto pifs = trigger["peripheral"].as<JsonArray>();
+          for(auto pifId : pifs)
             tally::led::show(pifId, colour, brightness);
-            isUpdated = true;
-            break;
-        } 
+          isUpdated = true;
+          break;
+        }
       }
+      if(isUpdated) break;
     }
     if(!isUpdated)
       tally::led::clear();
@@ -110,22 +117,13 @@ void connect() {
     }
    
   } else {
-    switcher = (target::Target*) new target::GoStream(tally::settings::query<IPAddress>("/network/targetAddress").value());
-    /*bool obsActive = tally::settings::query<bool>("/target/obs/active").value();
-    bool gostreamActive = tally::settings::query<bool>("/target/gostream/active").value();
-    if(gostreamActive)
-      switcher = (target::Target*) new target::GoStream(tally::settings::query<IPAddress>("/target/gostream/address").value());
-    else if(obsActive)
-      switcher = (target::Target*) new target::OBS(tally::settings::query<IPAddress>("/target/obs/address").value(), tally::settings::query<int>("/target/obs/port").value());
-    else
-      tally::serial::Println("Error: multiple active targets, you can only have one target active at a time");*/
+    switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/network/targetAddress").value());
   }
    tally::webui::init();
 }
 
-void ledWorker(void *pvParameters) {
+void tallyWorker(void *pvParameters) {
   while(1) {
-    //tally::led::show();
     updateTally();
     delay(2000);
   }
@@ -150,7 +148,7 @@ void setup() {
   Serial.begin(921600);
   initializeDevice();
   xTaskCreatePinnedToCore(
-    ledWorker, "LED worker", 10000, NULL, 2, &ledTask, 0);
+    tallyWorker, "Tally worker", 10000, NULL, 2, &ledTask, 0);
   xTaskCreatePinnedToCore(
     serialWorker, "Serial worker", 10000, NULL, 1, NULL, 0);
   //xTaskCreatePinnedToCore(
@@ -183,14 +181,15 @@ void loop() {
   // Check that we are connected 
   if(switcher) {  
     if(!switcher->connected() && state != "configuration") {
-      if(switcher->connect(&client)) {
+      if(switcher->start(&client)) {
         tally::settings::update("/state/status", "connected");
       } else {
         tally::settings::update("/state/status", "connecting");
       } 
     } else {
-      if(switcher->receive())
-          updateTally();
+      //if(switcher->receive())
+      updateTally();
+      sleep(0.5);
     }
   }
 }
