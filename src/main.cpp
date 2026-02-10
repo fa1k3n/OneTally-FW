@@ -10,6 +10,7 @@
 #include "tally-led.hpp"
 #include "tally-webui.hpp"
 #include <SPIFFS.h>
+#include <set>
 
 WiFiClient client, webclient;
 module::OneTallyModule* switcher = nullptr;
@@ -19,10 +20,10 @@ TaskHandle_t ledTask;
 bool smartModeInitialized = false;
 
 void initializeDevice() {
-              if(!SPIFFS.begin(true)){
-                  Serial.println("An Error has occurred while mounting SPIFFS");
-                        return;
-            }
+  if(!SPIFFS.begin(true)){
+      Serial.println("An Error has occurred while mounting SPIFFS");
+            return;
+  }
 
   tally::settings::init();
   tally::led::init();
@@ -40,25 +41,47 @@ void updateTally() {
       auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
       auto brightness = trigger["brightness"].as<uint8_t>();
 
-      for(auto moduleTriggers : moduleInfo->triggers) {
-          String qualifiedTriggerName = moduleInfo->moduleName + ":" + moduleTriggers;
-
-        if(switcher->handleTrigger(trigger)) {
-          auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
-          auto brightness = trigger["brightness"].as<uint8_t>();
-          auto pifs = trigger["peripheral"].as<JsonArray>();
-          for(auto pifId : pifs)
-            tally::led::show(pifId, colour, brightness);
-          isUpdated = true;
-          break;
-        }
+      if(switcher->handleTrigger(trigger)) { 
+        auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+        auto brightness = trigger["brightness"].as<uint8_t>();
+        auto pifs = trigger["peripherals"].as<JsonArray>();
+        tally::led::show(0, colour, brightness);
+        isUpdated = true;
+        break;
       }
       if(isUpdated) break;
     }
-    if(!isUpdated)
-      tally::led::clear();
+
+    if(!isUpdated) tally::led::clear();
   }
+      //if(isUpdated) break;
+
+   /* JsonArray allPifs = tally::settings::query<JsonArray>("/peripherals").value();        
+    for(auto pifId : allPifs) {
+      for(auto trigger : triggers) { 
+        auto pifs = trigger["peripheral"].as<JsonArray>();
+        if(std::find(pifs.begin(), pifs.end(), pifId) == pifs.end()) {
+          // Not active pif
+          tally::led::clear(pifId);
+          break;
+        }
+        auto srcId = trigger["srcId"].as<int>();
+        auto event = trigger["event"].as<String>();
+        auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+        auto brightness = trigger["brightness"].as<uint8_t>();
+        tally::led::show(pifId, colour, brightness);
+
+      }
+    }
+  }*/
 }
+   // JsonArray pifs = tally::settings::query<JsonArray>("/peripherals").value();
+   // for(auto pif : pifs) {
+   //   auto pifId = pif["id"].as<int>();
+   //   if(pifsInUse.find(pifId) == pifsInUse.end())
+   //     tally::led::clear(pifId);
+   // }
+  //}
 
 bool setUpWiFi(int maxTries) {
   auto ssid = tally::settings::query<std::string>("/network/wifi/ssid");
@@ -125,14 +148,17 @@ void connect() {
 void tallyWorker(void *pvParameters) {
   while(1) {
     updateTally();
-    delay(2000);
+    //taskYIELD();
+
+    vTaskDelay(200 / portTICK_RATE_MS);//delay(2000);
   }
 }
 
 void serialWorker(void *pvParameters) {
   while(1) {
     tally::serial::read();
-    delay(200);
+    taskYIELD();
+    //vTaskDelay(200 / portTICK_RATE_MS);//delay(200);
   }
 }
 
@@ -145,12 +171,14 @@ void batteryWorker(void *pvParameters) {
   }
 }
 void setup() {
-  Serial.begin(921600);
+  Serial.begin(115200);
   initializeDevice();
+  vTaskSuspendAll();
   xTaskCreatePinnedToCore(
-    tallyWorker, "Tally worker", 10000, NULL, 2, &ledTask, 0);
+    tallyWorker, "Tally worker", 10000, NULL, 1, &ledTask, 1);
   xTaskCreatePinnedToCore(
-    serialWorker, "Serial worker", 10000, NULL, 1, NULL, 0);
+    serialWorker, "Serial worker", 10000, NULL, 1, NULL, 1);
+  xTaskResumeAll();
   //xTaskCreatePinnedToCore(
   //  batteryWorker, "Battery worker", 10000, NULL, 1, NULL, 0);
   connect();
@@ -161,8 +189,8 @@ void restart() {
   // Notify pending shutdown
   tally::serial::Println("Info: tally is preparing to restart");
 
-  // Disconnect from switcher
-  if(switcher && switcher->connected()) switcher->disconnect();
+  // Stop switcher
+  if(switcher && switcher->started()) switcher->stop();
 
   // clear leds
   tally::led::clear();
@@ -173,23 +201,81 @@ void restart() {
   ESP.restart();
 }
 
+// the setup function runs once when you press reset or power the board
+#ifdef RGB_BUILTIN
+#undef RGB_BUILTIN
+#endif
+#define RGB_BUILTIN 21
+
 void loop() { 
 
-  if(!tally::settings::query<std::string>("/state/status")) return;
+//  if(!tally::settings::query<std::string>("/state/status")) return;
 
-  auto state = tally::settings::query<std::string>("/state/status").value();
+ // auto state = tally::settings::query<std::string>("/state/status").value();
   // Check that we are connected 
   if(switcher) {  
-    if(!switcher->connected() && state != "configuration") {
+    if(!switcher->started()) { //} && state != "configuration") {
       if(switcher->start(&client)) {
         tally::settings::update("/state/status", "connected");
       } else {
         tally::settings::update("/state/status", "connecting");
       } 
     } else {
-      //if(switcher->receive())
-      updateTally();
-      sleep(0.5);
+      //updateTally();
+      //vTaskDelay(200 / portTICK_RATE_MS);
+      //GP
     }
   }
+  vTaskDelay(200 / portTICK_RATE_MS);
 }
+
+/*
+  BlinkRGB
+
+  Demonstrates usage of onboard RGB LED on some ESP dev boards.
+
+  Calling digitalWrite(RGB_BUILTIN, HIGH) will use hidden RGB driver.
+    
+  RGBLedWrite demonstrates controll of each channel:
+  void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
+
+  WARNING: After using digitalWrite to drive RGB LED it will be impossible to drive the same pin
+    with normal HIGH/LOW level
+*/
+//#include <Adafruit_NeoPixel.h>
+/*#include <esp32-hal-rgb-led.h>
+#include <esp32-hal.h>
+
+//#define RGB_BRIGHTNESS 10 // Change white brightness (max 255)
+
+// the setup function runs once when you press reset or power the board
+#ifdef RGB_BUILTIN
+#undef RGB_BUILTIN
+#endif
+#define RGB_BUILTIN 21
+
+void setup() {
+  // No need to initialize the RGB LED
+}
+
+// the loop function runs over and over again forever
+void loop() {
+#ifdef RGB_BUILTIN
+  // digitalWrite(RGB_BUILTIN, HIGH);   // Turn the RGB LED white
+  neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,RGB_BRIGHTNESS,RGB_BRIGHTNESS); // Red
+  delay(1000);
+  // digitalWrite(RGB_BUILTIN, LOW);    // Turn the RGB LED off
+  neopixelWrite(RGB_BUILTIN,0,0,0); // Red
+  delay(1000);
+
+  neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0,0); // Red
+  delay(1000);
+  neopixelWrite(RGB_BUILTIN,0,RGB_BRIGHTNESS,0); // Green
+  delay(1000);
+  neopixelWrite(RGB_BUILTIN,0,0,RGB_BRIGHTNESS); // Blue
+  delay(1000);
+  neopixelWrite(RGB_BUILTIN,0,0,0); // Off / black
+  delay(1000);
+#endif
+}
+*/

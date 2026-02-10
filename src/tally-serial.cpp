@@ -169,6 +169,7 @@ namespace tally {
     
     void init(void) {
         Serial.println(F("Welcome to OneTally serial interface"));
+
         Prompt_(&serial_commands_);
         serial_commands_.SetDefaultHandler(cmd_unrecognized);
         serial_commands_.AddCommand(&cmd_query_);

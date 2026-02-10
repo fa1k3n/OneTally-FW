@@ -41,7 +41,9 @@ namespace tally {
                     pifAllocationMap[pif["id"].as<int>()] = leds.size();
                     leds.push_back(new Adafruit_NeoPixel(pif["count"].as<int>(), pif["ctrlPin"].as<int>(), order + NEO_KHZ800));
                     pinMode(pif["ctrlPin"].as<int>(), OUTPUT);
-                    digitalWrite(pif["pwrPin"].as<int>(), HIGH);
+                    auto pwrPin = pif["pwrPin"].as<int>();
+                    if(pwrPin != -1)
+                        digitalWrite(pwrPin, HIGH);
                 }
             }
 
@@ -56,6 +58,12 @@ namespace tally {
 
         void clear() {
             std::for_each(leds.begin(), leds.end(), [](Adafruit_NeoPixel* led) { led->clear(); led->show(); });
+        }
+
+        void clear(int pifId) {
+            auto led = leds[pifAllocationMap[pifId]];
+            led->clear();
+            led->show();
         }
 
         void show(int pifId, uint32_t colour, uint8_t brightness) {
