@@ -6,9 +6,12 @@
 
 namespace module {
 
-    GoStream::GoStream(IPAddress address, uint16_t port) : OneTallyModule(address, port) {
+    static QueueHandle_t* msgQ = NULL;
+
+    GoStream::GoStream(IPAddress address, uint16_t port, QueueHandle_t* messageQ) : OneTallyModule(address, port) {
         moduleInfo_.moduleName = "GoStream";
         moduleInfo_.triggers = std::vector<String>{"onPgm", "onPvw", "connecting", "connected"};
+        if(messageQ != NULL) msgQ = messageQ;
     }
 
     void GoStream::checkConnectionWorker_(void *pvParameters) {
@@ -22,7 +25,9 @@ namespace module {
                 instance->handleMessage_(*tmp);
                 delete tmp;
             }
-            taskYIELD(); //(200 / portTICK_RATE_MS); //delay(200);
+            bool value = true;
+            if(nofMessages > 0 && msgQ != NULL) xQueueSend(*msgQ, &value, portMAX_DELAY); 
+            vTaskDelay(200 / portTICK_RATE_MS); //delay(200);
         }
         vTaskDelete(NULL);
     }
@@ -34,10 +39,12 @@ namespace module {
             sendMessage_("pvwTally");
         }
         if(client_->connected()) {
+              vTaskSuspendAll();
+
             xTaskCreatePinnedToCore(
                 this->checkConnectionWorker_
-                , "GoStream check connection worker", 10000, this, 1, NULL, 1);
-
+                , "GoStreamWorker", 10000, this, 10, NULL, 1);
+            xTaskResumeAll();
             started_ = true;
         }
         return started_;

@@ -1,0 +1,68 @@
+{  
+  "targets": [
+    {
+      "type": "gostream",
+      "name": "GoStream"
+    }
+  ],
+  "triggers": [
+    {
+      "id": 0,
+      "peripheral": [ 0 ],
+      "module": "GoStream",
+      "event": "onPgm",
+      "srcId": 1,
+      "colour": "FF0000",
+      "brightness": 50
+    },
+    {
+      "id": 1,
+      "peripheral": [ 0 ],
+      "module": "GoStream",
+      "event": "onPvw",
+      "srcId": 1,
+      "colour": "00FF00",
+      "brightness": 50
+    },
+    {
+      "id": 2,
+      "peripheral": [ 0 ],
+      "module": "GoStream",
+      "event": "connecting",
+      "srcId": -1,
+      "colour": "0000FF",
+      "brightness": 50
+    },
+    {
+      "id": 3,
+      "peripheral": [ 0 ],
+      "module": "internal",
+      "event": "configuration",
+      "srcId": -1,
+      "colour": "FFFF00",
+      "brightness": 50
+    }
+  ],
+  "network": {
+    "targetAddress": "192.168.255.131",
+    "wifi": {
+      "ssid": "FalkenProduktion-Huginn-2.4GHz",
+      "pwd": "FalkenProduktionHemligt",
+      "manualCfg": false,
+      "address": "",
+      "gateway": "192.168.255.100",
+      "netmask": "255.255.255.0"
+    }
+  },
+  "peripherals": [
+    {
+      "id": 0,
+      "name": "LED 0",
+      "type": "WS2811",
+      "rgbOrder": "RGB",
+      "pwrPin": -1,
+      "ctrlPin": 21,
+      "count": 1
+    }
+  ]
+}
