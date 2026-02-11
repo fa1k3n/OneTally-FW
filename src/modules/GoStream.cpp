@@ -39,12 +39,9 @@ namespace module {
             sendMessage_("pvwTally");
         }
         if(client_->connected()) {
-              vTaskSuspendAll();
-
             xTaskCreatePinnedToCore(
                 this->checkConnectionWorker_
                 , "GoStreamWorker", 10000, this, 10, NULL, 1);
-            xTaskResumeAll();
             started_ = true;
         }
         return started_;
@@ -182,8 +179,6 @@ namespace module {
             for(auto id : value) {
                 pvwIds_.push_back(id.as<uint8_t>());
             }
-        } else {
-            Serial.printf("Unknown id: %s\n", command.c_str());
-        }
+        } 
     }
 }

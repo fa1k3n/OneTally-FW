@@ -141,10 +141,10 @@ void connect() {
 void tallyWorker(void *pvParameters) {
   while(1) {
     bool value;
-    if (xQueueReceive(updateQueue, &value, portMAX_DELAY)) {
-      updateTally();
-      Serial.println("UPDATE");
+    if (status == CONNECTED) {
+      xQueueReceive(updateQueue, &value, portMAX_DELAY);
     }
+    updateTally();
     vTaskDelay(200 / portTICK_RATE_MS);//delay(2000);
     //taskYIELD();
   }
@@ -169,16 +169,11 @@ void setup() {
   Serial.begin(115200);
   initializeDevice();
   updateQueue = xQueueCreate(5, sizeof(bool));
-  vTaskSuspendAll();
   xTaskCreatePinnedToCore(
     tallyWorker, "TallyWorker", 2048, NULL, 1, &ledTask, 1);
   xTaskCreatePinnedToCore(
     serialWorker, "SerialWorker", 10000, NULL, 1, NULL, 0);
-  xTaskResumeAll();
-  //xTaskCreatePinnedToCore(
-  //  batteryWorker, "Battery worker", 10000, NULL, 1, NULL, 0);
   connect();
-
 }
 
 void restart() {
