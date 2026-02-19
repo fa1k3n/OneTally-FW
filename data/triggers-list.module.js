@@ -60,6 +60,7 @@ angular.module('triggersList').
         ]    
 
         $scope.findPifById = function(id) {
+            if(id === -1) return ""
             return $scope.peripherals.find((item) => item.id === id).name 
         }
 

@@ -25,8 +25,7 @@ namespace module {
                 instance->handleMessage_(*tmp);
                 delete tmp;
             }
-            bool value = true;
-            if(nofMessages > 0 && msgQ != NULL) xQueueSend(*msgQ, &value, portMAX_DELAY); 
+            if(nofMessages > 0 && msgQ != NULL) xQueueSend(*msgQ, instance, portMAX_DELAY); 
             vTaskDelay(200 / portTICK_RATE_MS); //delay(200);
         }
         vTaskDelete(NULL);

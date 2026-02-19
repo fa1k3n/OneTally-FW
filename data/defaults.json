@@ -13,7 +13,7 @@
       "event": "onPgm",
       "srcId": 1,
       "colour": "FF0000",
-      "brightness": 50
+      "brightness": 100
     },
     {
       "id": 1,
@@ -22,7 +22,7 @@
       "event": "onPvw",
       "srcId": 1,
       "colour": "00FF00",
-      "brightness": 50
+      "brightness": 100
     },
     {
       "id": 2,
@@ -31,7 +31,7 @@
       "event": "connecting",
       "srcId": -1,
       "colour": "0000FF",
-      "brightness": 50
+      "brightness": 100
     },
     {
       "id": 3,
@@ -40,7 +40,7 @@
       "event": "configuration",
       "srcId": -1,
       "colour": "FFFF00",
-      "brightness": 50
+      "brightness": 100
     }
   ],
   "network": {

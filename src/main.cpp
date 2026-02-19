@@ -13,7 +13,10 @@
 #include <set>
 
 WiFiClient client, webclient;
-module::OneTallyModule* switcher = nullptr;
+typedef module::OneTallyModule* ModuleHandle_t;
+ModuleHandle_t internal = nullptr;
+ModuleHandle_t switcher = nullptr;
+QueueHandle_t updateQueue = nullptr;
 
 TaskHandle_t ledTask;
 
@@ -42,30 +45,27 @@ void initializeDevice() {
   tally::serial::init();
 }
 
-void updateTally() {
-  if(switcher) {
-    bool isUpdated = false;
-    auto moduleInfo = switcher->getInfo();
-    for(auto trigger : triggers) { 
-      auto event = trigger["event"].as<String>();
-      auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
-      auto brightness = trigger["brightness"].as<uint8_t>();
+void updateTally(module::OneTallyModule* module) {
+  bool isUpdated = false;
+  for(auto trigger : triggers) { 
+    auto event = trigger["event"].as<String>();
+    auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
+    auto brightness = trigger["brightness"].as<uint8_t>();
 
-      if ((event == "connecting" && status == CONNECTING) || 
-          (event == "configuration" && status == CONFIGURATION)) {
-        tally::led::show(0, colour, brightness);
-        isUpdated = true;
-        break;
-      } else if(switcher->handleTrigger(trigger)) { 
-        tally::led::show(0, colour, brightness);
-        isUpdated = true;
-        break;
-      } 
-      if(isUpdated) break;
-    }
-
-    if(!isUpdated) tally::led::clear();
+    if ((event == "connecting" && status == CONNECTING) || 
+        (event == "configuration" && status == CONFIGURATION)) {
+      tally::led::show(0, colour, brightness);
+      isUpdated = true;
+      break;
+    } else if(module != nullptr && module->handleTrigger(trigger)) { 
+      tally::led::show(0, colour, brightness);
+      isUpdated = true;
+      break;
+    } 
+    if(isUpdated) break;
   }
+
+  if(!isUpdated) tally::led::clear();
 }
 
 bool setUpWiFi(int maxTries) {
@@ -79,13 +79,13 @@ bool setUpWiFi(int maxTries) {
     tally::serial::Println(F("Warning: SSID not set, entering configuration mode"));
     tally::settings::update("/state/status", "configuration");
     status = CONFIGURATION;
-    updateTally(); 
+    updateTally(internal); 
     return true;
   }
 
   tally::settings::update("/state/status", "searching");
   status = SEARCHING;
-  updateTally(); 
+  updateTally(internal); 
   if(manualCfg.value()) {
     const auto tallyAddress = tally::settings::query<IPAddress>("/network/wifi/address").value();  
   }
@@ -103,7 +103,7 @@ bool setUpWiFi(int maxTries) {
     tally::serial::Println(F("OK"));
     tally::settings::update("/state/status", "connecting");
     status = CONNECTING;
-    updateTally(); 
+    updateTally(internal); 
     if(!manualCfg.value())
       tally::settings::update("/state/dhcpAddress", WiFi.localIP().toString().c_str());
   } else {
@@ -114,15 +114,13 @@ bool setUpWiFi(int maxTries) {
   return true;
 }
 
-QueueHandle_t updateQueue = NULL;
-
 void connect() {
   setUpWiFi(5);  
   if(WiFi.status() != WL_CONNECTED) {
     // Setup AP
     tally::settings::update("/state/status", "configuration");
     status = CONFIGURATION;
-    updateTally(); 
+    updateTally(internal); 
     WiFi.mode(WIFI_OFF);
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
@@ -140,11 +138,11 @@ void connect() {
 
 void tallyWorker(void *pvParameters) {
   while(1) {
-    bool value;
+    module::OneTallyModule* module = switcher;
     if (status == CONNECTED) {
-      xQueueReceive(updateQueue, &value, portMAX_DELAY);
+      xQueueReceive(updateQueue, module, portMAX_DELAY);
     }
-    updateTally();
+    updateTally(module);
     vTaskDelay(200 / portTICK_RATE_MS);//delay(2000);
     //taskYIELD();
   }
@@ -193,10 +191,6 @@ void restart() {
 }
 
 void loop() { 
-
-//  if(!tally::settings::query<std::string>("/state/status")) return;
-
- // auto state = tally::settings::query<std::string>("/state/status").value();
   // Check that we are connected 
   if(switcher) {  
     if(!switcher->started()) { //} && state != "configuration") {
@@ -206,8 +200,9 @@ void loop() {
       } else {
         tally::settings::update("/state/status", "connecting");
         status = CONNECTING;
-      } 
-      updateTally(); 
+      }
+      updateTally(internal);
+      //xQueueSend(updateQueue, nullptr, portMAX_DELAY);
     } 
   }
   vTaskDelay(200 / portTICK_RATE_MS);

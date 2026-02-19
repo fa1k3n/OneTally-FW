@@ -11,6 +11,9 @@ angular.
           .when("/network", {
             template: '<network></network>', 
           })
+          .when("/targets", {
+            template: '<targets-list></targets-list>'
+          })
           .when("/triggers", {
             template: '<triggers-list></triggers-list>', 
           })

@@ -145,6 +145,10 @@ namespace tally {
                 request->send(SPIFFS, "/triggers.html", "text/html");
             });
 
+            server.on("/targets.html", HTTP_GET, [](AsyncWebServerRequest *request){
+                request->send(SPIFFS, "/targets.html", "text/html");
+            });
+
             server.on("/peripherals.html", HTTP_GET, [](AsyncWebServerRequest *request){
                 request->send(SPIFFS, "/peripherals.html", "text/html");
             });
@@ -183,6 +187,13 @@ namespace tally {
             });
 
             server.on("/triggers", HTTP_GET, [](AsyncWebServerRequest *request){               
+                JsonVariantConst value = tally::settings::query<JsonVariant>(request->url().c_str()).value();
+                String sendValue; 
+                serializeJson(value, sendValue);
+                request->send(200, "application/json", sendValue);
+            });
+
+            server.on("/targets", HTTP_GET, [](AsyncWebServerRequest *request){               
                 JsonVariantConst value = tally::settings::query<JsonVariant>(request->url().c_str()).value();
                 String sendValue; 
                 serializeJson(value, sendValue);
