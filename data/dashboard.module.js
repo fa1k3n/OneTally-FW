@@ -5,7 +5,6 @@ var app = angular.module('dashboardApp', [
   'ui.bootstrap',
   'xeditable',
   'targetsList',
-  'targetDetails',
   'triggersList',
   'triggerDetails',
   'peripheralsList',

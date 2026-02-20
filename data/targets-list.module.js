@@ -1,7 +1,6 @@
 'use strict';
 
 angular.module('targetsList', [
-  'targetDetails',
   'ui.bootstrap'
 ]);
 
@@ -13,17 +12,8 @@ angular.module('targetsList').
    
 angular.module('targetsList').
   controller('targetsListCtrl', 
-    function($scope, $http, $uibModal, $document, $filter) {
-        var $ctrl = this
-        $scope.data = [
-          {  
-            "id": 0,
-            "name": "gostream_1",
-            "type": "GoStream D8",
-            "address": "192.168.255.131",
-            "enabled": true
-          },
-        ]
+    function($scope, $http, $filter) {
+        $scope.data = []
 
         $scope.supportedTypes = [
           { id: 1, name: "GoStream D8"},
@@ -66,53 +56,21 @@ angular.module('targetsList').
           });
         }
 
-        $scope.commit = function() {
-                      alert("DATA", $scope.data[0]);
+        $scope.new = function() {
+          $http.post("/targets", {}).then(function(response) {
+              alert(JSON.stringify(response))
+              $http.put("/commit", {}).then(function(resp) {
+                showSuccessMessage(response.id + " created successfully")
+              })
 
-            $http.put("/commit", {}).then(function(response) {
-                showSuccessMessage("saved successfully")
+             // $http.get("/targets/" + target.id)
+             //   .then(function(response) {                
+             //     let index = $scope.data.findIndex((item) => item.id === target.id)  
+             //     $scope.data[index] = response.data
+             //   });
             })
         }
-
-        $scope.new = function(parentSelector) {
-          var parentElem = parentSelector ? 
-          angular.element($document[0].querySelector('.modal-demo ' + parentSelector)) : undefined;
-          var newScope = {
-            data: {
-              "id": 0,
-              "name": "gostream_1",
-              "type": "GoStream D8",
-              "address": "",
-              "enabled": true
-            }      
-          }
-
-          var modalInstance = $uibModal.open({
-            templateUrl: 'target-details.templ.html',
-            animation: false,
-            controller: 'targetDetailsCtrl',
-            controllerAs: '$ctrl',
-            appendTo: parentElem,
-            backdrop: false, 
-            size: 'lg',
-            resolve: {
-                name: function() {
-                  return newScope.name;
-                },
-                data: function() {
-                    return newScope.data;
-                },
-            }
-          })
-
-          modalInstance.result.then(function(pifData) {
-            $http.post("/targets", pifData).then(function(response) {
-              showSuccessMessage(response.data.name + " updated successfully")
-              $scope.data.push(response.data)
-          });
-        })
-      }
-
+          
         $scope.delete_target = function(name) {
           $http.delete("/targets/" + name).then(function(response) {
             showSuccessMessage(name + " deleted successfully")
@@ -124,41 +82,5 @@ angular.module('targetsList').
             alert ("Failed to delete " + resp)
           })
         }
-        
-      $scope.open = function(parentSelector, name) {
-        var parentElem = parentSelector ? 
-        angular.element($document[0].querySelector('.modal-demo ' + parentSelector)) : undefined;
-        var modalInstance = $uibModal.open({
-            templateUrl: 'target-details.templ.html',
-            animation: false,
-            controller: 'targetDetailsCtrl',
-            controllerAs: '$ctrl',
-            appendTo: parentElem,
-            backdrop: false, 
-            size: 'lg',
-            resolve: {
-                name: function() {
-                  return name;
-                },
-                data: function() {
-                    return $scope.data[name];
-                },
-            }
-        });
-
-        modalInstance.result.then(function(targetData) {
-            $http.put("/targets/" + targetData.id, targetData).then(function(response) {
-              showSuccessMessage(targetData.name + " updated successfully")
-
-              $http.get("/target/" + targetData.id)
-                .then(function(response) {                
-                  let index = $scope.data.findIndex((item) => item.id === targetData.id)  
-                  $scope.data[index] = response.data
-
-                });
-            }, function() {
-          });
-        })
-    };
   })
     

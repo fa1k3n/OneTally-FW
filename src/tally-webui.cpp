@@ -104,7 +104,7 @@ namespace tally {
                 tally::settings::update("/targets/" + id + "/address", json["address"].as<String>().c_str());
                 tally::settings::update("/targets/" + id + "/enabled", json["enabled"].as<bool>());
             } else if (request->method() == HTTP_POST) {
-                //Serial.printf("Creating resource %s\n", resource.c_str());
+                Serial.printf("Creating resource %s\n", resource.c_str());
                 //JsonDocument doc;
                 //doc["id"] = json["id"].as<std::string>();
                 //doc["peripheral"] = json["peripheral"].as<std::string>();
@@ -117,10 +117,8 @@ namespace tally {
             } 
 
             auto value = tally::settings::query<JsonVariant>(resource);
-            Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
 
             if(value.has_value()) {
-                Serial.println("Send response");
                 String sendValue; 
                 serializeJson(value.value(), sendValue);
                 request->send(200, "application/json", sendValue);
