@@ -118,3 +118,18 @@ display: block;
   height: 24px;
   color:#DC3545
 }
+
+.form-icon-warning{
+  width: 24px;
+  height: 24px;
+  padding-left: 2px;
+  padding-right: 2px;
+  color:#DC3545
+}
+
+.form-icon{
+  width: 24px;
+  height: 24px;
+  padding-left: 2px;
+  padding-right: 2px;
+}

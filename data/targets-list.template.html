@@ -1,0 +1,51 @@
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 id="pageTitle" class="h1">Targets</h1>
+</div>
+
+<div id="targets" class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 ">
+    <div class="table-responsive" >
+        <table class="table table-bordered table-striped">
+            <thead>
+                    <tr>
+                    <th>name</th>
+                    <th>type</th>
+                    <th>IP address</th>
+                    <th>enabled</th>
+                    <th ng-click="new('.modal-parent')" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
+                    </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="target in data">
+                    <td width="28%">
+                        <span editable-text="target.name" e-name="name" e-form="rowform" onbeforesave="checkName($data, target.id)">{{ target.name || "no name" }}</span>
+                    </td>
+                    <td width="20%">
+                        <span editable-select="target.type" e-name="type" e-form="rowform" e-ng-options="s.id as s.name for s in supportedTypes">{{ showType(target) }}</span>
+                    </td>
+                    <td width="40%">
+                        <span editable-text="target.address" e-name="type" e-form="rowform" onbeforesave="checkAddress($data, target.id)">{{ target.address || "0.0.0.0" }}</span>
+                    </td>
+                    <td width="3%" style="text-align: center; vertical-align: middle;">    
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" e-name="enabled" e-form="rowform" id="enabled" ng-model="target.enabled" checked>
+                        </div>
+                    </td>
+                    <td width="10%" style="white-space: nowrap" style="text-align: center;">
+                        <form editable-form name="rowform" onbeforesave="saveTarget(target)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == target">
+                            <span class="form-icon" ng-disabled="rowform.$waiting" ng-click="rowform.$submit()" data-feather="save" ></span>
+                            <span class="form-icon-warning" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" data-feather="x-circle" ></span>
+                        </form>
+                        <div class="buttons" ng-show="!rowform.$visible">
+                            <span class="form-icon" ng-click="rowform.$show()" data-feather="edit" ></span>
+                            <span class="form-icon-warning" ng-click="delete_target(target.id)" data-feather="trash-2" ></span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+                feather.replace()
+    </script>
+</div>

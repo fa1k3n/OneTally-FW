@@ -34,14 +34,27 @@ namespace tally {
         }
 
         static AsyncCallbackJsonWebHandler *wifi_handler = new AsyncCallbackJsonWebHandler("/network", [](AsyncWebServerRequest *request, JsonVariant &json) {
+                std::string resource = std::string(request->url().c_str());
+
                 serializeJsonPretty(json, Serial);
                 tally::settings::update("/network/wifi/ssid", json["wifi"]["ssid"].as<String>().c_str());
                 tally::settings::update("/network/wifi/pwd", json["wifi"]["pwd"].as<String>().c_str());
-                tally::settings::update("/network/targetAddress", json["targetAddress"].as<String>().c_str());
                 tally::settings::update("/network/wifi/manualCfg", json["wifi"]["manualCfg"].as<bool>());   
                 tally::settings::update("/network/wifi/address", json["wifi"]["address"].as<String>().c_str());
                 tally::settings::update("/network/wifi/netmask", json["wifi"]["netmask"].as<String>().c_str());
             
+                auto value = tally::settings::query<JsonVariant>("/network");
+                Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
+
+                if(value.has_value()) {
+                    Serial.println("Send response");
+                    String sendValue; 
+                    serializeJson(value.value(), sendValue);
+                    request->send(200, "application/json", sendValue);
+                } else {
+                    request->send(400, "application/json");
+                }
+
                 request->send(200, "application/json");
             });
 
@@ -66,6 +79,41 @@ namespace tally {
                 doc["colour"] = json["colour"].as<std::string>();
                 doc["brightness"] = json["brightness"].as<int>();
                 tally::settings::create(request->url(), doc);
+            } 
+
+            auto value = tally::settings::query<JsonVariant>(resource);
+            Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
+
+            if(value.has_value()) {
+                Serial.println("Send response");
+                String sendValue; 
+                serializeJson(value.value(), sendValue);
+                request->send(200, "application/json", sendValue);
+            } else {
+                request->send(400, "application/json");
+            }
+        });
+
+        static AsyncCallbackJsonWebHandler *targets_handler = new AsyncCallbackJsonWebHandler("/targets", [](AsyncWebServerRequest *request, JsonVariant &json) {
+            const auto id = std::to_string(json["id"].as<int>());
+            std::string resource = std::string(request->url().c_str());
+
+            if (request->method() == HTTP_PUT) {
+                tally::settings::update("/targets/" + id + "/type", json["type"].as<int>());
+                tally::settings::update("/targets/" + id + "/name", json["name"].as<String>().c_str());
+                tally::settings::update("/targets/" + id + "/address", json["address"].as<String>().c_str());
+                tally::settings::update("/targets/" + id + "/enabled", json["enabled"].as<bool>());
+            } else if (request->method() == HTTP_POST) {
+                //Serial.printf("Creating resource %s\n", resource.c_str());
+                //JsonDocument doc;
+                //doc["id"] = json["id"].as<std::string>();
+                //doc["peripheral"] = json["peripheral"].as<std::string>();
+                //doc["event"] = json["event"].as<std::string>();
+                //doc["srcId"] = json["srcId"].as<std::string>();
+                //doc["assignedSrcId"] = "0";
+                //doc["colour"] = json["colour"].as<std::string>();
+                //doc["brightness"] = json["brightness"].as<int>();
+                //tally::settings::create(request->url(), doc);
             } 
 
             auto value = tally::settings::query<JsonVariant>(resource);
@@ -217,6 +265,9 @@ namespace tally {
 
             triggers_handler->setMethod(HTTP_POST | HTTP_PUT);
             server.addHandler(triggers_handler);
+
+            targets_handler->setMethod(HTTP_POST | HTTP_PUT);
+            server.addHandler(targets_handler);
 
             peripherals_handler->setMethod(HTTP_POST | HTTP_PUT);
             server.addHandler(peripherals_handler);

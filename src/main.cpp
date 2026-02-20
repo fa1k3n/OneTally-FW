@@ -131,7 +131,7 @@ void connect() {
     }
    
   } else {
-    switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/network/targetAddress").value(), 19010, &updateQueue);
+    switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/targets/0/address").value(), 19010, &updateQueue);
   }
    tally::webui::init();
 }

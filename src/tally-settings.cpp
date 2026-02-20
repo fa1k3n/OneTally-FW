@@ -63,8 +63,8 @@ namespace tally {
             serializeJson(settingsBank, settings_str);
             preferences.putString("settings", settings_str.c_str());
 
-            serializeJson(privateBank, settings_str);
-            preferences.putString("private", settings_str.c_str());
+            //serializeJson(privateBank, settings_str);
+            //preferences.putString("private", settings_str.c_str());
             hasUnsavedChanges = false;
             return true;
         }

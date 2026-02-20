@@ -22,11 +22,19 @@ angular.module('network').
             $scope.data = response.data
         });
        
-    $scope.commit = function() {
-        $http.post("/network", $scope.data).then(function(resp) {
-            $http.post("/commit").then(function(response) {
-                showSuccessMessage("Saved network settings succesfully")
+    $scope.save = function() {
+        $http.put("/network", $scope.data).then(function(resp) {
+            $http.put("/commit", {}).then(function(response) {
+                showSuccessMessage("Network settings updated successfully");
             })
+            
+            $http.get("/network")
+            .then(function(response) {                
+                $scope.data = response.data
+            });
+            //$http.post("/commit").then(function(response) {
+            //    showSuccessMessage("Saved network settings succesfully")
+            //})
         })
     }
     })

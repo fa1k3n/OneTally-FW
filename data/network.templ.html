@@ -3,17 +3,6 @@
         <h1 id="pageTitle" class="h1">Network</h1>
     </div>
     <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
-        <h2 class="h2">Switcher settings</h2>
-        <div class="form-group">
-            <label for="switcherType" class="control-label">Switcher type</label>
-            <select name="switcherType" class="form-control" id="switcherType">
-                <option ng-repeat="switcher in switchers" value="switcher.type">{{ switcher.name }}</option>
-            </select>
-        </div>
-            <div class="form-group">
-            <label for="switcherIP" class="control-label">Switcher IP</label>
-            <input type="text" class="form-control" required id="switcherIP" name="switcherIP" ng-model="data.targetAddress">
-        </div>
         <h2 class="h2">WiFi settings</h2>
         <div class="form-group">
             <label for="ssid" class="control-label">WiFi SSID:</label>
@@ -38,6 +27,6 @@
                     <input type="text" class="form-control" minlength="7" maxlength="15" required pattern="^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$" id="wifinetmask" name="netmask" ng-model="data.wifi.netmask">
             </div>
         </div>
-        <input type="submit" value="Save" class="btn btn-success" ng-click="commit()"> 
+        <input type="submit" value="Save" class="btn btn-success" ng-click="save()"> 
     </div>
 </div>

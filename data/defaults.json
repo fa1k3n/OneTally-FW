@@ -1,8 +1,11 @@
 {  
   "targets": [
     {
-      "type": "gostream",
-      "name": "GoStream"
+      "id": 0,
+      "type": 1,
+      "name": "GoStream D8",
+      "address": "",
+      "enabled": true
     }
   ],
   "triggers": [
@@ -44,10 +47,9 @@
     }
   ],
   "network": {
-    "targetAddress": "192.168.255.131",
     "wifi": {
-      "ssid": "FalkenProduktion-Huginn-2.4GHz",
-      "pwd": "FalkenProduktionHemligt",
+      "ssid": "",
+      "pwd": "",
       "manualCfg": false,
       "address": "",
       "gateway": "192.168.255.100",
