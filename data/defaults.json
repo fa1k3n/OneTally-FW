@@ -3,6 +3,13 @@
     {
       "id": 1,
       "type": 1,
+      "name": "Internal",
+      "address": "",
+      "enabled": true
+    }
+    {
+      "id": 2,
+      "type": 1,
       "name": "GoStream D8",
       "address": "",
       "enabled": true
@@ -10,8 +17,8 @@
   ],
   "triggers": [
     {
-      "id": 0,
-      "peripheral": [ 0 ],
+      "id": 1,
+      "peripheral": [ 1 ],
       "target": 1,
       "event": "onPgm",
       "srcId": 1,
@@ -19,8 +26,8 @@
       "brightness": 100
     },
     {
-      "id": 1,
-      "peripheral": [ 0 ],
+      "id": 2,
+      "peripheral": [ 1 ],
       "target": 1,
       "event": "onPvw",
       "srcId": 1,
@@ -28,8 +35,8 @@
       "brightness": 100
     },
     {
-      "id": 2,
-      "peripheral": [ 0 ],
+      "id": 3,
+      "peripheral": [ 1 ],
       "target": 0,
       "event": "connecting",
       "srcId": -1,
@@ -37,8 +44,8 @@
       "brightness": 100
     },
     {
-      "id": 3,
-      "peripheral": [ 0 ],
+      "id": 4,
+      "peripheral": [ 1 ],
       "target": 0,
       "event": "configuration",
       "srcId": -1,
@@ -58,11 +65,10 @@
   },
   "peripherals": [
     {
-      "id": 0,
+      "id": 1,
       "name": "LED 0",
       "type": "WS2811",
       "rgbOrder": "RGB",
-      "pwrPin": -1,
       "ctrlPin": 21,
       "count": 1
     }

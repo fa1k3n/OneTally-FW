@@ -13,7 +13,7 @@ angular.module('triggersList').
    
 angular.module('triggersList').
   controller('triggersListCtrl', 
-    function($scope, $http, $uibModal, $document) {
+    function($scope, $http, $uibModal, $document, $filter) {
         var $ctrl = this
 
         $scope.data = []
@@ -40,10 +40,13 @@ angular.module('triggersList').
              if(id === -1) return ""
             return $scope.targets.find((item) => item.id === id).name 
         }
-        
-        $scope.findPifById = function(id) {
-            if(id === -1) return ""
-            return $scope.peripherals.find((item) => item.id === id).name 
+
+        $scope.findPifById = function(pifId) {
+            var selected = [];
+            if(pifId) {
+                selected = $filter('filter')($scope.peripherals, {id: pifId});
+            }
+            return selected.length ? selected[0].name : 'Not set';
         }
 
         $http.get("/triggers")
@@ -55,16 +58,13 @@ angular.module('triggersList').
                 $scope.peripherals = response.data
             });
             
-        $scope.brightnessChange = function(triggerId) {
-            $http.put("/triggers/" + triggerId, $scope.data[triggerId]).then(function(response) {
-              //$http.put("/commit", {}).then(function(response) {
-                //showSuccessMessage(triggerId + " updated successfully")
-              })
+        $scope.brightnessChange = function(trigger) {
+            $http.put("/triggers/" + trigger.id + "/brightness", trigger).then(function(response) {})
         }
 
         $scope.commit = function() {
             $http.put("/commit", {}).then(function(response) {
-                showSuccessMessage("saved successfully")
+                showSuccessMessage("Trigger updated successfully")
             })
         }
 

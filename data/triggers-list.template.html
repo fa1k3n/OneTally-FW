@@ -28,13 +28,13 @@
                         <span editable-text="trigger.srcId" e-name="srcId" e-form="rowform">{{ trigger.srcId }}</span>
                     </td>
                     <td>
-                        <span editable-select="trigger.peripheral" e-name="peripheral" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals">{{ findPifById(trigger.peripheral[0] }}</span>
+                        <span editable-select="trigger.peripheral" e-name="peripheral" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals">{{ findPifById(trigger.peripheral[0]) }}</span>
                     </td>
                     <td>
                         <span editable-text="trigger.colour" e-name="colour" e-form="rowform"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></span>
                     </td>
                     <td>
-                        <input type="range" ng-model="trigger.brightness" ng-mouseup="commit()" ng-change="brightnessChange(trigger.id)" min="0" max="100" name="brightness">
+                        <input type="range" ng-model="trigger.brightness" ng-mouseup="commit()" ng-change="brightnessChange(trigger)" min="0" max="100" name="brightness">
                     </td>
                     <td style="white-space: nowrap" style="text-align: center;">
                         <form editable-form name="rowform" onbeforesave="saveEvent(trigger)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == trigger">

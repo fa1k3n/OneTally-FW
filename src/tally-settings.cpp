@@ -230,7 +230,13 @@ namespace tally {
             while (t != nullptr) {
                 JsonVariant foundObject;
                 if(tmp.is<JsonArray>()) {
-                    foundObject = tmp.as<JsonArray>()[std::stoi(t)].as<JsonVariant>();
+                    auto searchArray = tmp.as<JsonArray>();
+                    for (JsonVariant value : searchArray) {
+                        if(value["id"].as<int>() == std::stoi(t)) {
+                            foundObject = value;
+                            break;
+                        }
+                    }
                 } else {
                     foundObject = tmp[t];
                 }
