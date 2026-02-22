@@ -16,37 +16,9 @@ angular.module('triggersList').
     function($scope, $http, $uibModal, $document) {
         var $ctrl = this
 
-        $scope.data = [
-   /*         {
-                "id": 0,
-                "peripheral": 0,
-                "event": "onPvw",
-                "srcId": "1",
-                "colour": "00FF00",
-                "brightness": 60
-            }, 
-            {
-                "id": 1,
-                "peripheral": 0,
-                "event": "onPgm",
-                "srcId": "1",
-                "colour": "FF0000",
-                "brightness": 60
-            }
-                */
-        ]
+        $scope.data = []
 
-        $scope.peripherals = [
-    /*        {
-                "id": 0,
-                "name": "LED 0",
-            },
-            {
-                "id": 1,
-                "name": "LED 1",
-            }
-*/
-        ]
+        $scope.peripherals = []
 
         $scope.events = [
             { "id": "searching", "text": "While searching" },
@@ -57,8 +29,18 @@ angular.module('triggersList').
             { "id": "onPvw", "text": "On preview" },
             { "id": "live", "text": "While live" },
             { "id": "rec", "text": "While recording" },
-        ]    
+        ]   
+        
+        $scope.targets = [
+            { "id": 1, "name": "internal" },
+            { "id": 2, "name": "GoStream" }
+        ]
 
+        $scope.findTargetById = function(id) {
+             if(id === -1) return ""
+            return $scope.targets.find((item) => item.id === id).name 
+        }
+        
         $scope.findPifById = function(id) {
             if(id === -1) return ""
             return $scope.peripherals.find((item) => item.id === id).name 
@@ -74,12 +56,14 @@ angular.module('triggersList').
             });
             
         $scope.brightnessChange = function(triggerId) {
-            $http.post("/triggers/" + triggerId, $scope.data[triggerId])
+            $http.put("/triggers/" + triggerId, $scope.data[triggerId]).then(function(response) {
+              //$http.put("/commit", {}).then(function(response) {
+                //showSuccessMessage(triggerId + " updated successfully")
+              })
         }
 
-
         $scope.commit = function() {
-            $http.put("/commit").then(function(response) {
+            $http.put("/commit", {}).then(function(response) {
                 showSuccessMessage("saved successfully")
             })
         }

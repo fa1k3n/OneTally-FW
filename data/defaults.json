@@ -1,7 +1,7 @@
 {  
   "targets": [
     {
-      "id": 0,
+      "id": 1,
       "type": 1,
       "name": "GoStream D8",
       "address": "",
@@ -12,7 +12,7 @@
     {
       "id": 0,
       "peripheral": [ 0 ],
-      "module": "GoStream",
+      "target": 1,
       "event": "onPgm",
       "srcId": 1,
       "colour": "FF0000",
@@ -21,7 +21,7 @@
     {
       "id": 1,
       "peripheral": [ 0 ],
-      "module": "GoStream",
+      "target": 1,
       "event": "onPvw",
       "srcId": 1,
       "colour": "00FF00",
@@ -30,7 +30,7 @@
     {
       "id": 2,
       "peripheral": [ 0 ],
-      "module": "GoStream",
+      "target": 0,
       "event": "connecting",
       "srcId": -1,
       "colour": "0000FF",
@@ -39,7 +39,7 @@
     {
       "id": 3,
       "peripheral": [ 0 ],
-      "module": "internal",
+      "target": 0,
       "event": "configuration",
       "srcId": -1,
       "colour": "FFFF00",
