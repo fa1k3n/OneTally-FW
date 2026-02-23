@@ -63,8 +63,9 @@ namespace tally {
             std::string resource = std::string(request->url().c_str());
 
             if (request->method() == HTTP_PUT) {
-                tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<String>().c_str());
-                tally::settings::update("/triggers/" + id + "/event", json["event"].as<String>().c_str());
+                serializeJsonPretty(json["peripheral"], Serial);
+                tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<JsonArray>());
+                tally::settings::update("/triggers/" + id + "/event", json["event"].as<int>());
                 tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<String>().c_str());
                 tally::settings::update("/triggers/" + id + "/colour", json["colour"].as<String>().c_str());
                 tally::settings::update("/triggers/" + id + "/brightness", json["brightness"].as<int>());
@@ -72,8 +73,8 @@ namespace tally {
                 Serial.printf("Creating resource %s\n", resource.c_str());
                 JsonDocument doc;
                 doc["id"] = json["id"].as<std::string>();
-                doc["peripheral"] = json["peripheral"].as<std::string>();
-                doc["event"] = json["event"].as<std::string>();
+                doc["peripheral"] = json["peripheral"].as<JsonArray>();
+                doc["event"] = json["event"].as<int>();
                 doc["srcId"] = json["srcId"].as<std::string>();
                 doc["assignedSrcId"] = "0";
                 doc["colour"] = json["colour"].as<std::string>();
@@ -108,7 +109,7 @@ namespace tally {
                 //JsonDocument doc;
                 //doc["id"] = json["id"].as<std::string>();
                 //doc["peripheral"] = json["peripheral"].as<std::string>();
-                //doc["event"] = json["event"].as<std::string>();
+                //doc["event"] = json["event"].a<int>();
                 //doc["srcId"] = json["srcId"].as<std::string>();
                 //doc["assignedSrcId"] = "0";
                 //doc["colour"] = json["colour"].as<std::string>();

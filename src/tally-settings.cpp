@@ -359,6 +359,6 @@ namespace tally {
 
         bool update(std::string path, bool value) {
             return update(path, value == true ? "true" : "false");        
-        }
+        }z
     }
 }

@@ -48,12 +48,11 @@ void initializeDevice() {
 void updateTally(module::OneTallyModule* module) {
   bool isUpdated = false;
   for(auto trigger : triggers) { 
-    auto event = trigger["event"].as<String>();
+    auto event = trigger["event"].as<int>();
     auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
     auto brightness = trigger["brightness"].as<uint8_t>();
 
-    if ((event == "connecting" && status == CONNECTING) || 
-        (event == "configuration" && status == CONFIGURATION)) {
+    if (module == nullptr &&  (event == 4 && status == CONFIGURATION)) {
       tally::led::show(0, colour, brightness);
       isUpdated = true;
       break;

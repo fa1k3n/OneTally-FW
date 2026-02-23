@@ -6,10 +6,10 @@
       "name": "Internal",
       "address": "",
       "enabled": true
-    }
+    },
     {
       "id": 2,
-      "type": 1,
+      "type": 2,
       "name": "GoStream D8",
       "address": "",
       "enabled": true
@@ -19,8 +19,8 @@
     {
       "id": 1,
       "peripheral": [ 1 ],
-      "target": 1,
-      "event": "onPgm",
+      "target": 2,
+      "event": 1,
       "srcId": 1,
       "colour": "FF0000",
       "brightness": 100
@@ -28,8 +28,8 @@
     {
       "id": 2,
       "peripheral": [ 1 ],
-      "target": 1,
-      "event": "onPvw",
+      "target": 2,
+      "event": 2,
       "srcId": 1,
       "colour": "00FF00",
       "brightness": 100
@@ -37,8 +37,8 @@
     {
       "id": 3,
       "peripheral": [ 1 ],
-      "target": 0,
-      "event": "connecting",
+      "target": 2,
+      "event": 3,
       "srcId": -1,
       "colour": "0000FF",
       "brightness": 100
@@ -46,8 +46,8 @@
     {
       "id": 4,
       "peripheral": [ 1 ],
-      "target": 0,
-      "event": "configuration",
+      "target": 1,
+      "event": 4,
       "srcId": -1,
       "colour": "FFFF00",
       "brightness": 100

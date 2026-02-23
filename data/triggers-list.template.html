@@ -19,16 +19,16 @@
             <tbody>
                 <tr ng-repeat="trigger in data">
                     <td>
-                        <span editable-select="trigger.target" e-name="target" e-form="rowform" e-ng-options="target.id as target.name for target in targets">{{ findTargetById(1) }}</span>
+                        <span editable-select="trigger.target" e-name="target" e-form="rowform" e-ng-options="target.id as target.name for target in targets">{{ findTargetById(trigger.target) }}</span>
                     </td>
                     <td>
-                        <span editable-text="trigger.event" e-name="event" e-form="rowform">{{ trigger.event }}</span>
+                        <span editable-select="trigger.event" e-name="event" e-form="rowform" e-ng-options="event.id as event.name for event in events[trigger.target]">{{ getEventList(trigger) }}</span>
                     </td>
                     <td>
-                        <span editable-text="trigger.srcId" e-name="srcId" e-form="rowform">{{ trigger.srcId }}</span>
+                        <span editable-select="trigger.srcId" e-name="srcId" e-form="rowform" e-ng-options="srcId.id as srcId.name for srcId in srcIds">{{ trigger.srcId }}</span>
                     </td>
                     <td>
-                        <span editable-select="trigger.peripheral" e-name="peripheral" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals">{{ findPifById(trigger.peripheral[0]) }}</span>
+                        <span editable-checklist="trigger.peripheral" e-name="peripheral" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals" e-checklist-comparator="checkSelectedPifs(trigger)">{{ pifIdsToNames(trigger.peripheral) }}</span>
                     </td>
                     <td>
                         <span editable-text="trigger.colour" e-name="colour" e-form="rowform"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></span>
@@ -37,7 +37,7 @@
                         <input type="range" ng-model="trigger.brightness" ng-mouseup="commit()" ng-change="brightnessChange(trigger)" min="0" max="100" name="brightness">
                     </td>
                     <td style="white-space: nowrap" style="text-align: center;">
-                        <form editable-form name="rowform" onbeforesave="saveEvent(trigger)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == trigger">
+                        <form editable-form name="rowform" onbeforesave="saveTrigger(trigger)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == trigger">
                             <span class="form-icon" ng-disabled="rowform.$waiting" ng-click="rowform.$submit()" data-feather="save" ></span>
                             <span class="form-icon-warning" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" data-feather="x-circle" ></span>
                         </form>
@@ -46,13 +46,6 @@
                             <span class="form-icon-warning" ng-click="delete_trigger(trigger)" data-feather="trash-2" ></span>
                         </div>
                     </td>
-                    <!--<td ng-click="open('.modal-parent', trigger.id)">{{ trigger.id }}</td>
-                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.event }}</td>
-                    <td ng-click="open('.modal-parent', trigger.id)">{{ trigger.srcId }}</td>
-                    <td ng-click="open('.modal-parent', trigger.id)">{{ findPifById(trigger.peripheral) }}</td>
-                    <td ng-click="open('.modal-parent', trigger.id)"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></td>
-                    <td><input type="range" ng-model="trigger.brightness" ng-change="brightnessChange(trigger.id)" min="0" max="100" name="brightness"></td>
-                    <td ng-click="delete_trigger(trigger.id)"><span class="delete-resource" data-feather="trash-2" ></span></td>-->
                 </tr>
             </tbody>
         </table>

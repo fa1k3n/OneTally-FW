@@ -61,16 +61,20 @@ namespace module {
         return false;
     }
 
+    #define ON_PGM_ID 1
+    #define ON_PVW_ID 2
+    #define ON_CONNECTING 3
+    #define ON_CONNECTED 4
     bool GoStream::handleTrigger(JsonVariant trigger) {
-        auto event = trigger["event"].as<String>();
+        auto event = trigger["event"].as<int>();
 
-        if(event == "onPgm")
+        if(event == ON_PGM_ID)
             return onPgm(trigger);
-        else if(event == "onPvw")
+        else if(event == ON_PVW_ID)
             return onPvw(trigger);
-        else if(event == "connecting")
+        else if(event == ON_CONNECTING)
             return client_ != nullptr && !client_->connected();
-        else if(event == "connected")
+        else if(event == ON_CONNECTED)
             return client_ != nullptr && client_->connected();
         return false;
     }
