@@ -63,10 +63,9 @@ namespace tally {
             std::string resource = std::string(request->url().c_str());
 
             if (request->method() == HTTP_PUT) {
-                serializeJsonPretty(json["peripheral"], Serial);
                 tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<JsonArray>());
                 tally::settings::update("/triggers/" + id + "/event", json["event"].as<int>());
-                tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<String>().c_str());
+                tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<int>());
                 tally::settings::update("/triggers/" + id + "/colour", json["colour"].as<String>().c_str());
                 tally::settings::update("/triggers/" + id + "/brightness", json["brightness"].as<int>());
             } else if (request->method() == HTTP_POST) {

@@ -258,8 +258,7 @@ namespace tally {
                         foundObject.set(atoi(value.c_str()));
                     } else {
                         foundObject.set(value);
-                    }
-                        
+                    }                        
                 }
             }
             free(copy);
@@ -359,6 +358,18 @@ namespace tally {
 
         bool update(std::string path, bool value) {
             return update(path, value == true ? "true" : "false");        
-        }z
+        }
+
+        bool update(std::string path, JsonArray value) {
+            auto entryPoint = _find(path.c_str());
+            if(entryPoint.has_value()) {
+                entryPoint.value().set(value);
+                return true;
+            } else {
+                Serial.printf("Path %s not found\n", path.c_str());
+                return false;
+            }
+        }
+
     }
 }
