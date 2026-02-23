@@ -90,7 +90,7 @@ angular.module('triggersList').
         $scope.saveTrigger = function(trigger) {
              $http.put("/triggers/" + trigger.id, trigger).then(function(response) {
               $http.put("/commit", {}).then(function(response) {
-                showSuccessMessage(trigger.name + " updated successfully")
+                showSuccessMessage("Trigger updated successfully")
               })
 
               $http.get("/triggers/" + trigger.id)

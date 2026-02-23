@@ -10,7 +10,7 @@
                     <th>target</th>
                     <th>event</th>
                     <th>srcId</th>
-                    <th>peripheral</th>
+                    <th>peripherals</th>
                     <th>colour</th>
                     <th>brightness</th>
                     <th ng-click="new()" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
@@ -28,7 +28,7 @@
                         <span editable-select="trigger.srcId" e-name="srcId" e-form="rowform" e-ng-options="srcId.id as srcId.name for srcId in srcIds">{{ trigger.srcId }}</span>
                     </td>
                     <td>
-                        <span editable-checklist="trigger.peripheral" e-name="peripheral" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals" e-checklist-comparator="checkSelectedPifs(trigger)">{{ pifIdsToNames(trigger.peripheral) }}</span>
+                        <span editable-checklist="trigger.peripherals" e-name="peripherals" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals" e-checklist-comparator="checkSelectedPifs(trigger)">{{ pifIdsToNames(trigger.peripherals) }}</span>
                     </td>
                     <td>
                         <span editable-text="trigger.colour" e-name="colour" e-form="rowform"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></span>

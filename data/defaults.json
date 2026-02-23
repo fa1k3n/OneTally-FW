@@ -18,7 +18,7 @@
   "triggers": [
     {
       "id": 1,
-      "peripheral": [ 1 ],
+      "peripherals": [ 1 ],
       "target": 2,
       "event": 1,
       "srcId": 1,
@@ -27,7 +27,7 @@
     },
     {
       "id": 2,
-      "peripheral": [ 1 ],
+      "peripherals": [ 1 ],
       "target": 2,
       "event": 2,
       "srcId": 1,
@@ -36,7 +36,7 @@
     },
     {
       "id": 3,
-      "peripheral": [ 1 ],
+      "peripherals": [ 1 ],
       "target": 2,
       "event": 3,
       "srcId": -1,
@@ -45,7 +45,7 @@
     },
     {
       "id": 4,
-      "peripheral": [ 1 ],
+      "peripherals": [ 1 ],
       "target": 1,
       "event": 4,
       "srcId": -1,

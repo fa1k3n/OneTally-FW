@@ -44,7 +44,6 @@ namespace tally {
                 tally::settings::update("/network/wifi/netmask", json["wifi"]["netmask"].as<String>().c_str());
             
                 auto value = tally::settings::query<JsonVariant>("/network");
-                Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
 
                 if(value.has_value()) {
                     Serial.println("Send response");
@@ -63,7 +62,7 @@ namespace tally {
             std::string resource = std::string(request->url().c_str());
 
             if (request->method() == HTTP_PUT) {
-                tally::settings::update("/triggers/" + id + "/peripheral", json["peripheral"].as<JsonArray>());
+                tally::settings::update("/triggers/" + id + "/peripherals", json["peripherals"].as<JsonArray>());
                 tally::settings::update("/triggers/" + id + "/event", json["event"].as<int>());
                 tally::settings::update("/triggers/" + id + "/srcId", json["srcId"].as<int>());
                 tally::settings::update("/triggers/" + id + "/colour", json["colour"].as<String>().c_str());
@@ -82,7 +81,6 @@ namespace tally {
             } 
 
             auto value = tally::settings::query<JsonVariant>(resource);
-            Serial.printf("Query for resource %s gave answer %d\n", resource.c_str(), value.has_value());
 
             if(value.has_value()) {
                 Serial.println("Send response");
