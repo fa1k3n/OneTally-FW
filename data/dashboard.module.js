@@ -7,7 +7,6 @@ var app = angular.module('dashboardApp', [
   'targetsList',
   'triggersList',
   'peripheralsList',
-  'peripheralDetails',
   'network',
   'checklist-model'
 ]);
