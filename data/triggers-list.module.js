@@ -17,6 +17,8 @@ angular.module('triggersList').
 
         $scope.peripherals = []
 
+
+        // TODO: Add endpoint to fetch this
         $scope.events = {
             "1": [   // Internal
                 {"id": 4, "name": "configuration"},
@@ -29,6 +31,7 @@ angular.module('triggersList').
             ]
         }
 
+        // TODO: Add endpoint to fetch this
         $scope.srcIds = [
             { "id": 1, "name": "In 1" },
             { "id": 2, "name": "In 2" },
@@ -69,7 +72,6 @@ angular.module('triggersList').
         }
 
         $scope.usedPifsForTrigger = function(trigger, test) {
-            alert(trigger + " " + JSON.stringify(test))
             return [1];
         }
 
@@ -113,8 +115,8 @@ angular.module('triggersList').
 
         $scope.new = function(parentSelector) {}
 
-       $scope.delete = function(id) {
-          $http.delete("/triggers/" + id).then(function(response) {
+        $scope.delete = function(id) {
+       /*     $http.delete("/triggers/" + id).then(function(response) {
             showSuccessMessage(id + " deleted successfully")
             $http.get("/triggers")
               .then(function(response) {                
@@ -122,7 +124,7 @@ angular.module('triggersList').
               });
           }, function(resp) {
             alert ("Failed to delete " + resp)
-          })
-        }
+          }) */
+        } 
     })
     
