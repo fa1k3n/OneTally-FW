@@ -16,34 +16,43 @@ namespace tally {
         std::vector<Adafruit_NeoPixel*> leds;
 
         JsonDocument pifAllocationMap;
+
+        typedef enum {
+            WS2811 = 1
+        } boardType;
+
+        // Change these to the NEO_ defines and add endpoint to retreive them
+        typedef enum {
+            RGB = 1,
+            RBG = 2,
+            GRB = 3,
+            GBR = 4,
+            BRG = 5,
+            BGR = 6
+        } rgbByteOrder;
  
         void init() {
             leds.clear();
             auto peripherals = tally::settings::query<JsonVariant>("/peripherals").value();    
             for(auto pif : peripherals.as<JsonArray>()) {
-                pinMode(pif["pwrPin"].as<int>(), OUTPUT);
-                if(pif["type"].as<String>() == "WS2811") {
-                    String orderStr = pif["rgbOrder"];
-                    int order =  NEO_RGB;
-                    if(orderStr == "RGB") {
+                if(pif["type"].as<int>() == WS2811) {
+                    int order = pif["rgbOrder"];
+                    if(order == RGB) {
                         order = NEO_RGB;
-                    } else if (orderStr == "RBG") {
+                    } else if (order == RBG) {
                         order = NEO_RBG;
-                    } else if (orderStr == "GRB") {
+                    } else if (order == GRB) {
                         order = NEO_GRB;
-                    } else if (orderStr == "GBR") {
+                    } else if (order == GBR) {
                         order = NEO_GBR;
-                    } else if (orderStr == "BRG") {
+                    } else if (order == BRG) {
                         order = NEO_BRG;
-                    } else if (orderStr == "BGR") {
+                    } else if (order == BGR) {
                         order = NEO_BGR;
                     }
                     pifAllocationMap[pif["id"].as<int>()] = leds.size();
                     leds.push_back(new Adafruit_NeoPixel(pif["count"].as<int>(), pif["ctrlPin"].as<int>(), order + NEO_KHZ800));
                     pinMode(pif["ctrlPin"].as<int>(), OUTPUT);
-                    auto pwrPin = pif["pwrPin"].as<int>();
-                    if(pwrPin != -1)
-                        digitalWrite(pwrPin, HIGH);
                 }
             }
 

@@ -8,11 +8,9 @@
         <table class="table">
             <thead>
                     <tr>
-                    <th>#</th>
                     <th>name</th>
                     <th>type</th>
                     <th>RGB order</th> 
-                    <th>pwrPin #</th>
                     <th>ctrlPin #</th>
                     <th>count</th>
                     <th ng-click="new('.modal-parent')" style='cursor:pointer'><span class="create-resource" data-feather="plus-square" ></span></th>
@@ -20,19 +18,35 @@
             </thead>
             <tbody>
                 <tr ng-repeat="pif in data" class='clickable-row' style='cursor:pointer'>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.id }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.name }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.type }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.rgbOrder }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.pwrPin }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.ctrlPin }}</td>
-                    <td ng-click="open('.modal-parent', pif.id)">{{ pif.count }}</td>
-                    <td ng-click="delete_pif(pif.id)"><span class="delete-resource" data-feather="trash-2" ></span></td>
+                    <td>
+                        <span editable-text="pif.name" e-name="name" e-form="rowform">{{ pif.name }}</span>
+                    </td>
+                    <td>
+                        <span editable-select="pif.type" e-name="type" e-form="rowform" e-ng-options="boardType.id as boardType.name for boardType in boardTypes">{{ showBoardType(pif) }}</span>
+                    </td>
+                    <td>
+                        <span editable-select="pif.rgbOrder" e-name="rgbOrder" e-form="rowform" e-ng-options="rgbOrder.id as rgbOrder.name for rgbOrder in rgbOrders">{{ showRgbOrder(pif) }}</span>
+                    </td>
+                    <td>
+                        <span editable-text="pif.ctrlPin" e-name="name" e-form="rowform">{{ pif.ctrlPin }}</span>
+                    </td>
+                    <td>
+                        <span editable-text="pif.count" e-name="name" e-form="rowform">{{ pif.count }}</span>
+                    </td>
+                    <td style="white-space: nowrap" style="text-align: center;">
+                        <form editable-form name="rowform" onbeforesave="save_pif(pif)" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == pif">
+                            <span class="form-icon" ng-disabled="rowform.$waiting" ng-click="rowform.$submit()" data-feather="save" ></span>
+                            <span class="form-icon-warning" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" data-feather="x-circle" ></span>
+                        </form>
+                        <div class="buttons" ng-show="!rowform.$visible">
+                            <span class="form-icon" ng-click="rowform.$show()" data-feather="edit" ></span>
+                            <span class="form-icon-warning" ng-click="delete_pif(pif)" data-feather="trash-2" ></span>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
-    <button type="submit" id="commit_peripheral_button" class="btn btn-success" ng-click="commit()">Save</button>
     <script>
                 feather.replace()
     </script>

@@ -1,7 +1,6 @@
 'use strict';
 
 angular.module('triggersList', [
-  'triggerDetails',
   'ui.bootstrap'
 ]);
 
@@ -67,6 +66,11 @@ angular.module('triggersList').
                 selected = $filter('filter')($scope.events[trigger.target], {id: trigger.event});
             }
             return selected.length ? selected[0].name : 'Not set';
+        }
+
+        $scope.usedPifsForTrigger = function(trigger, test) {
+            alert(trigger + " " + JSON.stringify(test))
+            return [1];
         }
 
         $http.get("/peripherals")

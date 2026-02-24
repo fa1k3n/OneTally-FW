@@ -67,9 +67,10 @@
     {
       "id": 1,
       "name": "LED 0",
-      "type": "WS2811",
-      "rgbOrder": "RGB",
+      "type": 1,
+      "rgbOrder": 1,
       "ctrlPin": 21,
+      "pwrPin": 22,
       "count": 1
     }
   ]

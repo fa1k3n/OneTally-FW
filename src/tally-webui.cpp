@@ -129,24 +129,22 @@ namespace tally {
             std::string resource = std::string(request->url().c_str());
             if (request->method() == HTTP_PUT) {
                 tally::settings::update( resource + "/name", json["name"].as<std::string>());
-                tally::settings::update( resource + "/type", json["type"].as<std::string>());
-                tally::settings::update( resource + "/rgbOrder", json["rgbOrder"].as<std::string>());
-                tally::settings::update( resource + "/pwrPin", json["pwrPin"].as<int>());
+                tally::settings::update( resource + "/type", json["type"].as<int>());
+                tally::settings::update( resource + "/rgbOrder", json["rgbOrder"].as<int>());
                 tally::settings::update( resource + "/ctrlPin", json["ctrlPin"].as<int>());
                 tally::settings::update( resource + "/count", json["count"].as<int>());
             } else if (request->method() == HTTP_POST) {
                 JsonDocument doc;
-                doc["id"] = tally::settings::private_getPrivateBank()["nextPIFIndex"].as<u_int16_t>();
+     /*          doc["id"] = tally::settings::private_getPrivateBank()["nextPIFIndex"].as<u_int16_t>();
                 tally::settings::private_getPrivateBank()["nextPIFIndex"] = doc["id"].as<u_int16_t>() + 1;
                 resource = resource + "/" + doc["id"].as<std::string>();
                 Serial.printf("Creating resource %s\n", resource.c_str());
                 doc["name"] = json["name"].as<std::string>();
-                doc["type"] = json["type"].as<std::string>();
-                doc["rgbOrder"] = json["rgbOrder"].as<std::string>();
-                doc["pwrPin"] = json["pwrPin"].as<int>();
+                doc["type"] = json["type"].as<int>();
+                doc["rgbOrder"] = json["rgbOrder"].as<int>();
                 doc["ctrlPin"] = json["ctrlPin"].as<int>();
                 doc["count"] = json["count"].as<int>();
-                tally::settings::create(request->url(), doc);
+                tally::settings::create(request->url(), doc); */
             } 
             
             auto value = tally::settings::query<JsonVariant>(resource);

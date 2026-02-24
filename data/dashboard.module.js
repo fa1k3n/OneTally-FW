@@ -6,10 +6,10 @@ var app = angular.module('dashboardApp', [
   'xeditable',
   'targetsList',
   'triggersList',
-  'triggerDetails',
   'peripheralsList',
   'peripheralDetails',
-  'network'
+  'network',
+  'checklist-model'
 ]);
 
 app.run(['editableOptions', function(editableOptions) {
