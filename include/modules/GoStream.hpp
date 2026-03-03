@@ -25,7 +25,7 @@ namespace module {
 
         std::queue<JsonDocument*> messageQueue_;
 
-        std::vector<uint8_t> pgmIds_;
-        std::vector<uint8_t> pvwIds_;        
+        std::vector<uint16_t> pgmIds_;
+        std::vector<uint16_t> pvwIds_;        
     };
 }

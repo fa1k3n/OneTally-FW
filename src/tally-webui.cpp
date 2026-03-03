@@ -46,7 +46,6 @@ namespace tally {
                 auto value = tally::settings::query<JsonVariant>("/network");
 
                 if(value.has_value()) {
-                    Serial.println("Send response");
                     String sendValue; 
                     serializeJson(value.value(), sendValue);
                     request->send(200, "application/json", sendValue);
@@ -83,7 +82,6 @@ namespace tally {
             auto value = tally::settings::query<JsonVariant>(resource);
 
             if(value.has_value()) {
-                Serial.println("Send response");
                 String sendValue; 
                 serializeJson(value.value(), sendValue);
                 request->send(200, "application/json", sendValue);

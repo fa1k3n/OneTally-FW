@@ -1,4 +1,6 @@
 #include <SPI.h>
+#include <HardwareSerial.h>
+
 #include <ArduinoJson.h>
 #include "WiFi.h"
 
@@ -31,7 +33,7 @@ typedef enum {
 tStatus status = INACTIVE;
 
 bool smartModeInitialized = false;
-JsonArray triggers;
+
 
 void initializeDevice() {
   if(!SPIFFS.begin(true)){
@@ -40,18 +42,17 @@ void initializeDevice() {
   }
 
   tally::settings::init();
-  triggers = tally::settings::query<JsonArray>("/triggers").value();
   tally::led::init();
   tally::serial::init();
 }
 
 void updateTally(module::OneTallyModule* module) {
   bool isUpdated = false;
+  JsonArray triggers = tally::settings::query<JsonArray>("/triggers").value();
   for(auto trigger : triggers) { 
     auto event = trigger["event"].as<int>();
     auto colour = std::strtoul(trigger["colour"].as<String>().c_str(), NULL, 16);
     auto brightness = trigger["brightness"].as<uint8_t>();
-
     if (module == nullptr &&  (event == 4 && status == CONFIGURATION)) {
       tally::led::show(0, colour, brightness);
       isUpdated = true;
@@ -65,6 +66,7 @@ void updateTally(module::OneTallyModule* module) {
   }
 
   if(!isUpdated) tally::led::clear();
+
 }
 
 bool setUpWiFi(int maxTries) {
@@ -130,7 +132,9 @@ void connect() {
     }
    
   } else {
-    switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/targets/0/address").value(), 19010, &updateQueue);
+    switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/targets/1/address").value(), 19010, &updateQueue);
+    // TODO: change to UDP protocol
+    //switcher = (module::OneTallyModule*) new module::GoStream(tally::settings::query<IPAddress>("/targets/1/address").value(), 19018, &updateQueue);
   }
    tally::webui::init();
 }
@@ -156,9 +160,9 @@ void serialWorker(void *pvParameters) {
 
 void batteryWorker(void *pvParameters) {
   while(1) {
-    int digitalValue = analogRead(GPIO_NUM_34);// read the value from the analog channel
-    float Aout = digitalValue * (3.20 / (4096.00 - 1.00));
-    Serial.println(digitalValue);
+   // int digitalValue = analogRead(GPIO_NUM_34);// read the value from the analog channel
+   // float Aout = digitalValue * (3.20 / (4096.00 - 1.00));
+   // Serial.println(digitalValue);
     delay(1000);
   }
 }
@@ -167,7 +171,7 @@ void setup() {
   initializeDevice();
   updateQueue = xQueueCreate(5, sizeof(bool));
   xTaskCreatePinnedToCore(
-    tallyWorker, "TallyWorker", 2048, NULL, 1, &ledTask, 1);
+    tallyWorker, "TallyWorker", 10000, NULL, 1, &ledTask, 1);
   xTaskCreatePinnedToCore(
     serialWorker, "SerialWorker", 10000, NULL, 1, NULL, 0);
   connect();

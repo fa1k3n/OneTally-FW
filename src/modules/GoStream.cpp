@@ -72,10 +72,10 @@ namespace module {
             return onPgm(trigger);
         else if(event == ON_PVW_ID)
             return onPvw(trigger);
-        else if(event == ON_CONNECTING)
-            return client_ != nullptr && !client_->connected();
-        else if(event == ON_CONNECTED)
-            return client_ != nullptr && client_->connected();
+       // else if(event == ON_CONNECTING)
+       //     return client_ != nullptr && !client_->connected();
+       // else if(event == ON_CONNECTED)
+       //     return client_ != nullptr && client_->connected();
         return false;
     }
 
@@ -175,12 +175,12 @@ namespace module {
         if(command == String("pgmTally")) {
             pgmIds_.clear();
             for(auto id : value) {
-                pgmIds_.push_back(id.as<uint8_t>());
+                pgmIds_.push_back(id.as<uint16_t>());
             }
         } else if(command == String("pvwTally")) {
             pvwIds_.clear();
             for(auto id : value) {
-                pvwIds_.push_back(id.as<uint8_t>());
+                pvwIds_.push_back(id.as<uint16_t>());
             }
         } 
     }

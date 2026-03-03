@@ -15,10 +15,10 @@ angular.module('targetsList').
     function($scope, $http, $filter) {
         $scope.data = []
 
+        // TODO: Fetch this data
         $scope.supportedTypes = [
-          { id: 1, name: "GoStream D8"},
-          { id: 2, name: "GoStream Duet"},
-          { id: 3, name: "GoStream Solo"}
+          { id: 0, name: "Internal"},
+          { id: 1, name: "GoStream D8"}
         ]
 
         $http.get("/targets")

@@ -20,10 +20,10 @@ angular.module('triggersList').
 
         // TODO: Add endpoint to fetch this
         $scope.events = {
-            "1": [   // Internal
+            "0": [   // Internal
                 {"id": 4, "name": "configuration"},
             ],
-            "2": [   // GoStream D8
+            "1": [   // GoStream D8
                 { "id": 1, "name": "onPgm" },
                 { "id": 2, "name": "onPvw" },
                 { "id": 3, "name": "connecting" },
@@ -37,16 +37,17 @@ angular.module('triggersList').
             { "id": 2, "name": "In 2" },
             { "id": 3, "name": "In 3" },
             { "id": 4, "name": "In 4" },
-            { "id": 5, "name": "In 5" },
-            { "id": 6, "name": "In 6" },
-            { "id": 7, "name": "In 7" },
-            { "id": 8, "name": "In 8" },
+            { "id": 4001, "name": "In 5" },
+            { "id": 4002, "name": "In 6" },
+            { "id": 4003, "name": "In 7" },
+            { "id": 4004, "name": "In 8" },
         ]
         
         $scope.targets = []
 
         $scope.findTargetById = function(targetId) {
             var selected = [];
+            if(targetId == 0) return "internal"
             if(targetId) {
                 selected = $filter('filter')($scope.targets, {id: targetId});
             }
@@ -81,7 +82,10 @@ angular.module('triggersList').
             });
         $http.get("/targets")
             .then(function(response) {                
-                $scope.targets = response.data
+                $scope.targets = [
+                    {"id": 0, "type": 0, "name": "internal", address: "N/A", enabled: true},
+                    ...response.data
+                ]
             });
 
         $http.get("/triggers")
