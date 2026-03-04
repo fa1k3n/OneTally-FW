@@ -64,6 +64,14 @@ angular.module('triggersList').
             return selected.length ? selected.join(', ') : 'Not set';
         }
 
+        $scope.findSrcById = function(srcId) {
+            var selected = [];
+            if(srcId) {
+                selected = $filter('filter')($scope.srcIds, {id: srcId});
+            }
+            return selected.length ? selected[0] : { id: 0, name: 'Not set'};
+        }
+
         $scope.getEventList = function(trigger) {
             var selected = [];
             if(trigger) {

@@ -25,7 +25,7 @@
                         <span editable-select="trigger.event" e-name="event" e-form="rowform" e-ng-options="event.id as event.name for event in events[trigger.target]">{{ getEventList(trigger) }}</span>
                     </td>
                     <td>
-                        <span editable-select="trigger.srcId" e-name="srcId" e-form="rowform" e-ng-options="srcId.id as srcId.name for srcId in srcIds">{{ trigger.srcId }}</span>
+                        <span editable-select="trigger.srcId" e-name="srcId" e-form="rowform" e-ng-options="srcId.id as srcId.name for srcId in srcIds">{{ findSrcById(trigger.srcId).name }}</span>
                     </td>
                     <td>
                         <span editable-checklist="trigger.peripherals" e-name="trigger.peripherals" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals" e-checklist-comparator="usedPifsForTrigger">{{ pifIdsToNames(trigger.peripherals) }}</span>
