@@ -31,7 +31,7 @@
                         <span editable-checklist="trigger.peripherals" e-name="trigger.peripherals" e-form="rowform" e-ng-options="pif.id as pif.name for pif in peripherals" e-checklist-comparator="usedPifsForTrigger">{{ pifIdsToNames(trigger.peripherals) }}</span>
                     </td>
                     <td>
-                        <span editable-text="trigger.colour" e-name="colour" e-form="rowform"><div class="circle" style="background-color: #{{ trigger.colour }}"></div></span>
+                        <span editable-text="trigger.colour" e-name="colour" e-form="rowform"><div class="circle" ng-style="getColorStyle(trigger)"></div></span>
                     </td>
                     <td>
                         <input type="range" ng-model="trigger.brightness" ng-mouseup="commit()" ng-change="brightnessChange(trigger)" min="0" max="100" name="brightness">

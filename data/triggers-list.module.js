@@ -80,6 +80,10 @@ angular.module('triggersList').
             return selected.length ? selected[0].name : 'Not set';
         }
 
+        $scope.getColorStyle = function(trigger) {
+            return { 'background-color': '#' + trigger.colour }
+        }
+
         $scope.usedPifsForTrigger = function(trigger, test) {
             return [1];
         }
@@ -102,7 +106,7 @@ angular.module('triggersList').
             });
             
         $scope.brightnessChange = function(trigger) {
-            $http.put("/triggers/" + trigger.id + "/brightness", trigger).then(function(response) {})
+            $http.put("/triggers/" + trigger.id, trigger).then(function(response) {})
         }
 
         $scope.saveTrigger = function(trigger) {
