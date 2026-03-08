@@ -61,7 +61,7 @@
       "id": 1,
       "name": "Board LED",
       "type": 1,
-      "rgbOrder": 1,
+      "rgbOrder": 3,
       "ctrlPin": 21,
       "count": 1
     }

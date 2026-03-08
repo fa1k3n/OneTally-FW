@@ -214,7 +214,6 @@ namespace tally {
             });
 
             server.on("/triggers", HTTP_DELETE, [](AsyncWebServerRequest *request){     
-                Serial.printf("Removing trigger %s\n", request->url().c_str() );   
                 tally::settings::remove(request->url());
                 request->send(200, "application/json");
             });
